@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/product_list"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/buttonUpdate"
+        android:layout_width="105dp"
+        android:layout_height="wrap_content"
+        android:layout_row="2"
+        android:layout_column="0"
+        android:text="Update" />
+
+    <Button
+        android:id="@+id/buttonDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_row="2"
+        android:layout_column="1"
+        android:backgroundTint="#F44336"
+        android:text="Delete"
+        android:textColor="#000000" />
+
+    <Button
+        android:id="@+id/buttonIncrease"
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:layout_row="1"
+        android:layout_column="2"
+        android:text="INCREASE" />
+
+    <EditText
+        android:id="@+id/increaseValue"
+        android:layout_width="42dp"
+        android:layout_height="wrap_content"
+        android:layout_row="1"
+        android:layout_column="1"
+        android:ems="10"
+        android:inputType="numberSigned" />
+
+    <EditText
+        android:id="@+id/manufacturerValue"
+        android:layout_width="191dp"
+        android:layout_height="wrap_content"
+        android:layout_row="0"
+        android:layout_column="1"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Name" />
+
+    <TextView
+        android:id="@+id/manufacturerTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_row="0"
+        android:layout_column="0"
+        android:text="manufacturer"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/increaseText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_row="1"
+        android:layout_column="0"
+        android:text="increase by "
+        android:textSize="18sp" />
+</GridLayout>
