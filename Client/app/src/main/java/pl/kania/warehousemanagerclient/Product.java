@@ -2,13 +2,22 @@ package pl.kania.warehousemanagerclient;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Product {
 
+    private Long id;
+    @Setter
     private String manufacturerName;
+    @Setter
+    private String modelName;
+    @Setter
+    private Double price;
+    private Integer quantity;
 }

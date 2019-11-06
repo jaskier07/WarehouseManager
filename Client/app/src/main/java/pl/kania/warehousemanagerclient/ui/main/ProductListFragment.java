@@ -25,8 +25,8 @@ public class ProductListFragment extends Fragment {
         ListView view = (ListView)inflater.inflate(R.layout.listview_product, container, false);
 
         List<Product> products = new ArrayList<>();
-        products.add(new Product("samsung"));
-        products.add(new Product("huawei"));
+        products.add(new Product(1L, "samsung", "galaxy", 25.0, 3));
+        products.add(new Product(2L, "huawei", "P9", 30.0, 4));
 
         ProductAdapter productAdapter = new ProductAdapter(view.getContext(), R.layout.listview_product, products);
         view.setAdapter(productAdapter);
