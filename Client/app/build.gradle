@@ -33,4 +33,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'org.projectlombok:lombok:1.18.10'
     annotationProcessor 'org.projectlombok:lombok:1.18.10'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
 }

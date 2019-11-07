@@ -16,20 +16,20 @@ import java.util.List;
 import pl.kania.warehousemanagerclient.Product;
 import pl.kania.warehousemanagerclient.ProductAdapter;
 import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.RestService;
 
 public class ProductListFragment extends Fragment {
+
+    private RestService restService = new RestService();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         ListView view = (ListView)inflater.inflate(R.layout.listview_product, container, false);
-
-        List<Product> products = new ArrayList<>();
-        products.add(new Product(1L, "samsung", "galaxy", 25.0, 3));
-        products.add(new Product(2L, "huawei", "P9", 30.0, 4));
-
-        ProductAdapter productAdapter = new ProductAdapter(view.getContext(), R.layout.listview_product, products);
+        ProductAdapter productAdapter = new ProductAdapter(view.getContext(), R.layout.listview_product, new ArrayList<>());
         view.setAdapter(productAdapter);
+
+        restService.getAllProducts(r -> getActivity().runOnUiThread(() -> productAdapter.addAll(r)));
 
         return view;
     }
