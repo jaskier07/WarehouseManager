@@ -8,17 +8,16 @@ import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 import pl.kania.warehousemanagerclient.model.ProductQuantity;
 
 import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
 
-class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity> {
+class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity> {
 
-    private final Runnable afterIncrease;
+    private final Runnable afterDecrease;
 
-    TaskIncreaseProductQuantity(Runnable afterIncrease) {
-        this.afterIncrease = afterIncrease;
+    TaskDecreaseProductQuantity(Runnable afterDecrease) {
+        this.afterDecrease = afterDecrease;
     }
 
     @Override
@@ -29,12 +28,12 @@ class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity> {
                 final Call call = getClient().newCall(request);
                 final Response response = call.execute();
                 if (response.isSuccessful()) {
-                    afterIncrease.run();
+                    afterDecrease.run();
                 } else {
-                    Log.w("increase", "Increasing product's amount did not complete successfully: " + response.code());
+                    Log.w("decrease", "Decreasing product's amount did not complete successfully: " + response.code());
                 }
             } catch (Exception e) {
-                Log.e("increase", "An error occured while increasing product's amount", e);
+                Log.e("decrease", "An error occured while decreasing product's amount", e);
             }
         }
         return null;
@@ -43,7 +42,7 @@ class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity> {
     private Request getRequest(ProductQuantity productQuantity) throws JsonProcessingException {
         final RequestBody responseBody = RequestBody.create(getMediaType(), getObjectMapper().writeValueAsString(productQuantity.getQuantity()));
         return new Request.Builder()
-                .url(BASE_URI_PRODUCT + "/" + productQuantity.getProductId() + "/increase")
+                .url(BASE_URI_PRODUCT + "/" + productQuantity.getProductId() + "/decrease")
                 .patch(responseBody)
                 .build();
     }
