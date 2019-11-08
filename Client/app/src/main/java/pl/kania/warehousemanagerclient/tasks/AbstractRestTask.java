@@ -12,7 +12,7 @@ import okhttp3.Request;
 import static pl.kania.warehousemanagerclient.RestService.BASE_URI;
 
 @Getter(value = AccessLevel.PROTECTED)
-public abstract class AbstractRestTask extends AsyncTask<Void, Void, Void> {
+public abstract class AbstractRestTask<P> extends AsyncTask<P, Void, Void> {
     private final OkHttpClient client = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 }

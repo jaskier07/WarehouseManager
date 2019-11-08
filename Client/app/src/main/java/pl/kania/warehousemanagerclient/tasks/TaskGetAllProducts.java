@@ -15,7 +15,7 @@ import pl.kania.warehousemanagerclient.Product;
 import static pl.kania.warehousemanagerclient.RestService.BASE_URI;
 
 
-public class TaskGetAllProducts extends AbstractRestTask {
+public class TaskGetAllProducts extends AbstractRestTask<Void> {
     private final Consumer<List<Product>> updateProducts;
 
     public TaskGetAllProducts(Consumer<List<Product>> updateProducts) {

@@ -7,9 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Product {
 
     private Long id;
@@ -19,5 +20,6 @@ public class Product {
     private String modelName;
     @Setter
     private Double price;
+
     private Integer quantity;
 }

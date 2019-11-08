@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">http://5fa831e1.ngrok.io</domain>
+        <domain includeSubdomains="true">153.19.216.67</domain>
+        <domain includeSubdomains="true">153.19.216.67:8080</domain>
+        <domain includeSubdomains="true">http://153.19.216.67</domain>
+        <domain includeSubdomains="true">http://153.19.216.67:8080</domain>
+        <domain includeSubdomains="true">https://153.19.216.67</domain>
+    </domain-config>
+</network-security-config>

@@ -5,8 +5,6 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,10 +12,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
 public class LogInFragment extends Fragment {
 
-    private ProductListFragment productListFragment = new ProductListFragment();
+    private MenuFragment menu_fragment = new MenuFragment();
 
     public static LogInFragment newInstance() {
         return new LogInFragment();
@@ -29,16 +28,8 @@ public class LogInFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.log_in_fragment, container, false);
         Button buttonLogIn = view.findViewById(R.id.buttonLogIn);
-        buttonLogIn.setOnClickListener(v -> loadFragment(productListFragment));
+        buttonLogIn.setOnClickListener(v -> FragmentLoader.load(menu_fragment, getFragmentManager()));
         return view;
-    }
-
-    private void loadFragment(Fragment fragment) {
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .addToBackStack(null)
-                .commit();
     }
 
 }
