@@ -1,5 +1,7 @@
 package pl.kania.warehousemanagerclient.tasks;
 
+import android.util.Log;
+
 import pl.kania.warehousemanagerclient.model.Product;
 
 class TaskUpdateProduct extends AbstractRestTask<Product> {
@@ -12,6 +14,7 @@ class TaskUpdateProduct extends AbstractRestTask<Product> {
 
     @Override
     protected Void doInBackground(Product... products) {
+        Log.i("task", "update");
         return null;
     }
 }
