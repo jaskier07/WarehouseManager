@@ -14,6 +14,7 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -29,8 +30,8 @@ public class ProductAdapter extends ArrayAdapter<Product> {
     private final RestService restService = new RestService();
     private final Activity activity;
 
-    public ProductAdapter(@NonNull Context context, @LayoutRes int resource, List<Product> objects, Activity activity) {
-        super(context, 0, objects);
+    public ProductAdapter(@NonNull Context context, Activity activity) {
+        super(context, 0, new ArrayList<>());
         this.activity = activity;
     }
 

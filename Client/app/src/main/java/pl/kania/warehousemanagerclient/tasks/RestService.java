@@ -9,6 +9,7 @@ import pl.kania.warehousemanagerclient.model.ProductQuantity;
 public class RestService {
 
     public static final String BASE_URI = "http://b75b818d.ngrok.io";
+    public static final String BASE_URI_PRODUCT = BASE_URI + "/product";
 
     public void getAllProducts(Consumer<List<Product>> updateProducts) {
         new TaskGetAllProducts(updateProducts).execute();
@@ -31,6 +32,6 @@ public class RestService {
     }
 
     public void updateProduct(Product product, Runnable afterUpdate) {
-        new TaskUpdateProduct(afterUpdate).doInBackground(product);
+        new TaskUpdateProduct(afterUpdate).execute(product);
     }
 }

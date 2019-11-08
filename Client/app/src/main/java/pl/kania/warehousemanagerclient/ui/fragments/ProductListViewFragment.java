@@ -27,7 +27,7 @@ public class ProductListViewFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final ListView view = (ListView)inflater.inflate(R.layout.product_list_view_fragment, container, false);
-        productAdapter = new ProductAdapter(view.getContext(), R.layout.product_list_view_fragment, new ArrayList<>(), getActivity());
+        productAdapter = new ProductAdapter(view.getContext(), getActivity());
         view.setAdapter(productAdapter);
 
         restService.getAllProducts(productAdapter.updateList(getActivity()));
