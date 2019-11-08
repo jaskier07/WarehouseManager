@@ -8,6 +8,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.constraints.Min;
 
@@ -31,7 +32,7 @@ public class Product {
     private Double price;
 
     @Column(name = "QUANTITY")
-    private Integer quantity;
+    private Integer quantity = 0;
 
     public void update(Product updatedProduct) {
         setManufacturerName(updatedProduct.getManufacturerName());

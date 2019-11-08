@@ -1,7 +1,7 @@
 package pl.kania.warehousemanager.dao;
 
 public interface ChangeableQuantity {
-    void decreaseProductQuantityBy(Integer quantity, Long productId);
+    boolean decreaseProductQuantityBy(Integer quantity, Long productId);
 
-    void increaseProductQuantityBy(Integer quantity, Long productId);
+    boolean increaseProductQuantityBy(Integer quantity, Long productId);
 }

@@ -18,13 +18,13 @@ import javax.ws.rs.QueryParam;
 import java.net.URI;
 import java.util.Optional;
 
-@RestController("/products")
+@RestController
 public class ProductResource {
 
     @Autowired
     private ProductRepository productDao;
 
-    @GetMapping("/all")
+    @GetMapping("/products")
     public ResponseEntity<Iterable<Product>> getAllProducts() {
         return ResponseEntity.ok(productDao.findAll());
     }
@@ -38,14 +38,15 @@ public class ProductResource {
         return ResponseEntity.ok(product.get());
     }
 
-    @PostMapping
-    public ResponseEntity<Void> addProduct(Product product) {
+    @PostMapping("/product")
+    public ResponseEntity<Void> addProduct(@RequestBody Product product) {
         if (product == null) {
             return getResponseEntityNullParameter();
         }
 
+        product.setQuantity(0);
         product = productDao.save(product);
-        URI uri = UriComponentsBuilder.fromHttpUrl("/product/" + product.getId()).build().toUri();
+        URI uri = UriComponentsBuilder.fromUriString("/product/" + product.getId()).build().toUri();
         return ResponseEntity.created(uri).build();
     }
 
@@ -56,6 +57,7 @@ public class ProductResource {
             return ResponseEntity.notFound().build();
         }
         Product productFound = productOpt.get();
+        productFound.update(product);
         productDao.save(productFound);
         return ResponseEntity.ok().build();
     }
@@ -71,7 +73,7 @@ public class ProductResource {
     }
 
     @PatchMapping("/product/{productId}/increase")
-    public ResponseEntity<Void> increaseProductQuantityBy(@QueryParam("quantity") Integer quantity, @PathVariable("productId") Long productId) {
+    public ResponseEntity<Void> increaseProductQuantityBy(@RequestBody Integer quantity, @PathVariable("productId") Long productId) {
         if (quantity == null || productId == null) {
             return getResponseEntityNullParameter();
         }
@@ -79,12 +81,14 @@ public class ProductResource {
         if (productNotExists(productId)) {
             return ResponseEntity.notFound().build();
         }
-        productDao.increaseProductQuantityBy(quantity, productId);
+        if (!productDao.increaseProductQuantityBy(quantity, productId)) {
+            return ResponseEntity.unprocessableEntity().build();
+        }
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/product/{productId}/decrease")
-    public ResponseEntity<Void> decreaseProductQuantityBy(@QueryParam("quantity") Integer quantity, @PathVariable("productId") Long productId) {
+    public ResponseEntity<Void> decreaseProductQuantityBy(@RequestBody Integer quantity, @PathVariable("productId") Long productId) {
         if (quantity == null || productId == null) {
             return getResponseEntityNullParameter();
         }
@@ -92,7 +96,9 @@ public class ProductResource {
         if (productNotExists(productId)) {
             return ResponseEntity.notFound().build();
         }
-        productDao.decreaseProductQuantityBy(quantity, productId);
+        if (!productDao.decreaseProductQuantityBy(quantity, productId)) {
+            return ResponseEntity.unprocessableEntity().build();
+        }
         return ResponseEntity.ok().build();
     }
 
