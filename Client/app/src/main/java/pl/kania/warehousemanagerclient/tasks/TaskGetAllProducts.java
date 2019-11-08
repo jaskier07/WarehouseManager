@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
-import pl.kania.warehousemanagerclient.Product;
+import pl.kania.warehousemanagerclient.model.Product;
 
 import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
 

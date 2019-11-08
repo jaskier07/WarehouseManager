@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient;
+package pl.kania.warehousemanagerclient.model;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

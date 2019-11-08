@@ -1,6 +1,6 @@
 package pl.kania.warehousemanagerclient.tasks;
 
-import pl.kania.warehousemanagerclient.Product;
+import pl.kania.warehousemanagerclient.model.Product;
 
 class TaskUpdateProduct extends AbstractRestTask<Product> {
 

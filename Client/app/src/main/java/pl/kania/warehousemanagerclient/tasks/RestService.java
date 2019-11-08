@@ -3,13 +3,8 @@ package pl.kania.warehousemanagerclient.tasks;
 import java.util.List;
 import java.util.function.Consumer;
 
-import pl.kania.warehousemanagerclient.Product;
-import pl.kania.warehousemanagerclient.ProductQuantity;
-import pl.kania.warehousemanagerclient.tasks.TaskAddProduct;
-import pl.kania.warehousemanagerclient.tasks.TaskDecreseProductQuantity;
-import pl.kania.warehousemanagerclient.tasks.TaskDeleteProduct;
-import pl.kania.warehousemanagerclient.tasks.TaskGetAllProducts;
-import pl.kania.warehousemanagerclient.tasks.TaskIncreaseProductQuantity;
+import pl.kania.warehousemanagerclient.model.Product;
+import pl.kania.warehousemanagerclient.model.ProductQuantity;
 
 public class RestService {
 

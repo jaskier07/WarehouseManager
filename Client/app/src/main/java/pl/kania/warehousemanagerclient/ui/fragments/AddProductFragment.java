@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.ui.main;
+package pl.kania.warehousemanagerclient.ui.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import pl.kania.warehousemanagerclient.Product;
+import pl.kania.warehousemanagerclient.model.Product;
 import pl.kania.warehousemanagerclient.R;
 import pl.kania.warehousemanagerclient.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;

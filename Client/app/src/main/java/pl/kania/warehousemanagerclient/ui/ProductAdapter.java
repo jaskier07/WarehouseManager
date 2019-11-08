@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient;
+package pl.kania.warehousemanagerclient.ui;
 
 import android.app.Activity;
 import android.content.Context;
@@ -15,6 +15,9 @@ import androidx.annotation.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
+
+import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.model.Product;
 
 public class ProductAdapter extends ArrayAdapter<Product> {
     public ProductAdapter(@NonNull Context context, @LayoutRes int resource, List<Product> objects) {

@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
-import pl.kania.warehousemanagerclient.ui.main.LogInFragment;
+import pl.kania.warehousemanagerclient.ui.fragments.LogInFragment;
 
 public class MainActivity extends AppCompatActivity {
 

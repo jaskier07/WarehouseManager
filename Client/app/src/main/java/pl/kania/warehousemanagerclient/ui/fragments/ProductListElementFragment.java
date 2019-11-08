@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.ui.main;
+package pl.kania.warehousemanagerclient.ui.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,14 +12,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import org.w3c.dom.Text;
-
-import pl.kania.warehousemanagerclient.Product;
-import pl.kania.warehousemanagerclient.ProductAdapter;
-import pl.kania.warehousemanagerclient.ProductQuantity;
+import pl.kania.warehousemanagerclient.model.Product;
+import pl.kania.warehousemanagerclient.ui.ProductAdapter;
+import pl.kania.warehousemanagerclient.model.ProductQuantity;
 import pl.kania.warehousemanagerclient.R;
 import pl.kania.warehousemanagerclient.tasks.RestService;
-import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
 public class ProductListElementFragment extends Fragment {

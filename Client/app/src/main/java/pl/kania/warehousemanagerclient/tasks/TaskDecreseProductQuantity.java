@@ -1,6 +1,6 @@
 package pl.kania.warehousemanagerclient.tasks;
 
-import pl.kania.warehousemanagerclient.ProductQuantity;
+import pl.kania.warehousemanagerclient.model.ProductQuantity;
 
 class TaskDecreseProductQuantity extends AbstractRestTask<ProductQuantity> {
 

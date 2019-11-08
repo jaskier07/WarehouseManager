@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.ui.main;
+package pl.kania.warehousemanagerclient.ui.fragments;
 
 import android.os.Bundle;
 
