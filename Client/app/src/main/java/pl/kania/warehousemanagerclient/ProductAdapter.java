@@ -1,5 +1,6 @@
 package pl.kania.warehousemanagerclient;
 
+import android.app.Activity;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ProductAdapter extends ArrayAdapter<Product> {
     public ProductAdapter(@NonNull Context context, @LayoutRes int resource, List<Product> objects) {
@@ -22,24 +24,23 @@ public class ProductAdapter extends ArrayAdapter<Product> {
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        View listItemView = convertView;
-        if (listItemView == null) {
-            listItemView = LayoutInflater.from(getContext()).inflate(R.layout.product_list_element_fragment, parent, false);
+        if (convertView == null) {
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.product_list_element_fragment, parent, false);
         }
         Product product = getItem(position);
 
-        EditText manufacturerValue = listItemView.findViewById(R.id.manufacturerValue);
+        EditText manufacturerValue = convertView.findViewById(R.id.manufacturerValue);
         manufacturerValue.setText(product.getManufacturerName());
-        EditText modelValue = listItemView.findViewById(R.id.modelValue);
+        EditText modelValue = convertView.findViewById(R.id.modelValue);
         modelValue.setText(product.getModelName());
-        EditText priceValue = listItemView.findViewById(R.id.priceValue);
+        EditText priceValue = convertView.findViewById(R.id.priceValue);
         priceValue.setText(getNullSafeNumberValue(product.getPrice()));
-        TextView quantityValue = listItemView.findViewById(R.id.quantityValue);
+        TextView quantityValue = convertView.findViewById(R.id.quantityValue);
         quantityValue.setText(getNullSafeNumberValue(product.getQuantity()));
-        TextView idValue = listItemView.findViewById(R.id.idValue);
+        TextView idValue = convertView.findViewById(R.id.idValue);
         idValue.setText(getNullSafeNumberValue(product.getId()));
 
-        return listItemView;
+        return convertView;
     }
 
     private String getNullSafeNumberValue(Number number) {
@@ -47,5 +48,12 @@ public class ProductAdapter extends ArrayAdapter<Product> {
             return "-";
         }
         return number.toString();
+    }
+
+    public Consumer<List<Product>> updateList(Activity activity) {
+        return r -> activity.runOnUiThread(() -> {
+            clear();
+            addAll(r);
+        });
     }
 }

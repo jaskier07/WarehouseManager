@@ -11,23 +11,29 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
+import lombok.Getter;
+import pl.kania.warehousemanagerclient.Product;
 import pl.kania.warehousemanagerclient.ProductAdapter;
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.RestService;
+import pl.kania.warehousemanagerclient.tasks.RestService;
 
 public class ProductListViewFragment extends Fragment {
 
-    private RestService restService = new RestService();
+    private final RestService restService = new RestService();
+    @Getter
+    private ProductAdapter productAdapter;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        ListView view = (ListView)inflater.inflate(R.layout.product_list_view_fragment, container, false);
-        ProductAdapter productAdapter = new ProductAdapter(view.getContext(), R.layout.product_list_view_fragment, new ArrayList<>());
+        final ListView view = (ListView)inflater.inflate(R.layout.product_list_view_fragment, container, false);
+        productAdapter = new ProductAdapter(view.getContext(), R.layout.product_list_view_fragment, new ArrayList<>());
         view.setAdapter(productAdapter);
 
-        restService.getAllProducts(r -> getActivity().runOnUiThread(() -> productAdapter.addAll(r)));
+        restService.getAllProducts(productAdapter.updateList(getActivity()));
 
         return view;
     }

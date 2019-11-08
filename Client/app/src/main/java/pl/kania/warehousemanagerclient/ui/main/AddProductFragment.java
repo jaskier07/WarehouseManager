@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,7 +13,7 @@ import androidx.fragment.app.Fragment;
 
 import pl.kania.warehousemanagerclient.Product;
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.RestService;
+import pl.kania.warehousemanagerclient.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
 public class AddProductFragment extends Fragment {

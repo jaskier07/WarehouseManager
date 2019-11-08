@@ -2,7 +2,6 @@ package pl.kania.warehousemanagerclient.tasks;
 
 import android.util.Log;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -12,13 +11,13 @@ import okhttp3.Request;
 import okhttp3.Response;
 import pl.kania.warehousemanagerclient.Product;
 
-import static pl.kania.warehousemanagerclient.RestService.BASE_URI;
+import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
 
 
-public class TaskGetAllProducts extends AbstractRestTask<Void> {
+class TaskGetAllProducts extends AbstractRestTask<Void> {
     private final Consumer<List<Product>> updateProducts;
 
-    public TaskGetAllProducts(Consumer<List<Product>> updateProducts) {
+    TaskGetAllProducts(Consumer<List<Product>> updateProducts) {
         this.updateProducts = updateProducts;
     }
 

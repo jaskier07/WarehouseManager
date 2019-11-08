@@ -5,22 +5,20 @@ import android.util.Log;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import okhttp3.Call;
-import okhttp3.FormBody;
 import okhttp3.MediaType;
-import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import pl.kania.warehousemanagerclient.Product;
 
-import static okhttp3.MultipartBody.FORM;
-import static pl.kania.warehousemanagerclient.RestService.BASE_URI;
+import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
 
-public class TaskAddProduct extends AbstractRestTask<Product> {
+class TaskAddProduct extends AbstractRestTask<Product> {
 
+    private static final String MEDIA_TYPE = "application/json; charset=utf-8";
     private final Runnable afterAdd;
 
-    public TaskAddProduct(Runnable afterAdd) {
+    TaskAddProduct(Runnable afterAdd) {
         this.afterAdd = afterAdd;
     }
 
@@ -28,9 +26,7 @@ public class TaskAddProduct extends AbstractRestTask<Product> {
     protected Void doInBackground(Product... products) {
         try {
             final ObjectMapper objectMapper = new ObjectMapper();
-            final RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(products[0]));
-//                    .add("product", objectMapper.writeValueAsString(products[0]))
-//                    .build();
+            final RequestBody requestBody = RequestBody.create(MediaType.parse(MEDIA_TYPE), objectMapper.writeValueAsString(products[0]));
             final Request request = new Request.Builder()
                     .url(BASE_URI + "/product")
                     .post(requestBody)
