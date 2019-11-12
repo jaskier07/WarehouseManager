@@ -12,7 +12,7 @@ import pl.kania.warehousemanagerclient.model.ProductQuantity;
 
 import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
 
-class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity> {
+class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void> {
 
     private final Runnable afterDecrease;
 

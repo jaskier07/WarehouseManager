@@ -3,19 +3,16 @@ package pl.kania.warehousemanagerclient.tasks;
 import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import okhttp3.Call;
-import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import pl.kania.warehousemanagerclient.model.Product;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
 import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
 
-class TaskAddProduct extends AbstractRestTask<Product> {
+class TaskAddProduct extends AbstractRestTask<Product, Void> {
 
     private final Runnable afterAdd;
 

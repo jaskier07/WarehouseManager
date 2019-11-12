@@ -8,12 +8,11 @@ import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 import pl.kania.warehousemanagerclient.model.ProductQuantity;
 
 import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
 
-class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity> {
+class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void> {
 
     private final Runnable afterIncrease;
 

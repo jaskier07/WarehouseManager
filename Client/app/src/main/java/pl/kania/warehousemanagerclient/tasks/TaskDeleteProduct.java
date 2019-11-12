@@ -6,10 +6,9 @@ import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
 import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
 
-class TaskDeleteProduct extends AbstractRestTask<Long> {
+class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
 
     private final Runnable afterDelete;
 

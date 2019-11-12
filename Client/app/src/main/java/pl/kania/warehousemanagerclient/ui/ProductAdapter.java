@@ -9,8 +9,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -22,7 +22,6 @@ import pl.kania.warehousemanagerclient.R;
 import pl.kania.warehousemanagerclient.model.Product;
 import pl.kania.warehousemanagerclient.model.ProductQuantity;
 import pl.kania.warehousemanagerclient.tasks.RestService;
-import pl.kania.warehousemanagerclient.ui.fragments.ProductListViewFragment;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
 public class ProductAdapter extends ArrayAdapter<Product> {
@@ -67,15 +66,17 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         Button delete = convertView.findViewById(R.id.buttonDelete);
         delete.setOnClickListener(c -> restService.deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
-        increase.setOnClickListener(c -> restService.increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue), TextParser.parseInt(increaseBy)), this::updateArrayAdapter));
+        increase.setOnClickListener(c -> restService.increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
+                TextParser.parseInt(increaseBy)), this::updateArrayAdapter));
         Button decrease = convertView.findViewById(R.id.buttonDecrease);
-        decrease.setOnClickListener(c -> restService.decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue), TextParser.parseInt(decreaseBy)), this::updateArrayAdapter));
+        decrease.setOnClickListener(c -> restService.decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
+                TextParser.parseInt(decreaseBy)), this::updateArrayAdapter));
 
         return convertView;
     }
 
     private void updateArrayAdapter() {
-        updateList(activity);
+        restService.getAllProducts(prod -> updateList(activity).accept(prod));
     }
 
     private String getNullSafeNumberValue(Number number) {
@@ -87,8 +88,12 @@ public class ProductAdapter extends ArrayAdapter<Product> {
 
     public Consumer<List<Product>> updateList(Activity activity) {
         return r -> activity.runOnUiThread(() -> {
-            clear();
-            addAll(r);
+            if (r != null) {
+                clear();
+                addAll(r);
+                notifyDataSetChanged();
+                Toast.makeText(getContext(), "Product list has been updated", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }
