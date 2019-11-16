@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.services;
+package pl.kania.warehousemanager.resources;
 
 import org.springframework.web.bind.annotation.RestController;
 

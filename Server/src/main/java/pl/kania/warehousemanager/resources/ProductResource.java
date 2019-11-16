@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.services;
+package pl.kania.warehousemanager.resources;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
