@@ -11,9 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -46,6 +44,10 @@ public class LogInFragment extends Fragment {
     private static final int R_LOG_IN = 1;
     private static final int R_SIGN_IN = 2;
     private SharedPreferences sharedPreferences;
+    private EditText loginEditText;
+    private EditText passwordEditText;
+    private EditText loginEditTextSignIn;
+    private EditText passwordEditTextSignIn;
     private TextView info;
     private String clientId;
     private String clientSecret;
@@ -60,11 +62,15 @@ public class LogInFragment extends Fragment {
 
         info = view.findViewById(R.id.log_in_info);
         info.setText("-");
+        loginEditText = view.findViewById(R.id.loginValueLogIn);
+        passwordEditText = view.findViewById(R.id.passwordValueLogIn);
+        loginEditTextSignIn = view.findViewById(R.id.loginValueSignIn);
+        passwordEditTextSignIn = view.findViewById(R.id.passwordValueSignIn);
 
         sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
         clientId = getContext().getString(R.string.client_id);
-        clientSecret =  getContext().getString(R.string.client_secret);
-        googleClientId =  getContext().getString(R.string.google_client_id);
+        clientSecret = getContext().getString(R.string.client_secret);
+        googleClientId = getContext().getString(R.string.google_client_id);
         final String token = sharedPreferences.getString(SHARED_PREFERENCES_TOKEN, null);
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -91,18 +97,18 @@ public class LogInFragment extends Fragment {
 
     private void handleLoggedUser() {
         info.setText("User is loggged.");
-        FragmentLoader.load(new MenuFragment(), getFragmentManager());
+        FragmentLoader.load(new MenuFragment(googleClientSignIn), getFragmentManager());
     }
 
     private void handleNotLoggedUser(View view) {
         info.setText("You are not logged");
 
         final Button buttonLogIn = view.findViewById(R.id.buttonLogIn);
-        buttonLogIn.setOnClickListener(c -> getUserCredentialsFromForm(view, R.id.loginValueLogIn, R.id.passwordValueLogIn)
+        buttonLogIn.setOnClickListener(c -> getUserCredentialsFromForm(loginEditText, passwordEditText)
                 .ifPresent(this::actionLogIn));
 
         final Button buttonSignIn = view.findViewById(R.id.buttonSignIn);
-        buttonSignIn.setOnClickListener(c -> getUserCredentialsFromForm(view, R.id.loginValueSignIn, R.id.passwordValueSignIn)
+        buttonSignIn.setOnClickListener(c -> getUserCredentialsFromForm(loginEditTextSignIn, passwordEditTextSignIn)
                 .ifPresent(this::actionSignIn));
 
         final SignInButton buttonGoogleLogIn = view.findViewById(R.id.buttonLogInGoogle);
@@ -113,7 +119,6 @@ public class LogInFragment extends Fragment {
             Intent signInIntent = googleClientSignIn.getSignInIntent();
             startActivityForResult(signInIntent, R_SIGN_IN);
         });
-
     }
 
     private void actionSignIn(UserCredentials userCredentials) {
@@ -138,8 +143,15 @@ public class LogInFragment extends Fragment {
 
     private void actionLogInWithGoogle() {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
-        if (account != null) {
-            googleClientSignIn.signOut().addOnCompleteListener(a -> Toast.makeText(getContext(), "Logged out", Toast.LENGTH_LONG).show());
+        if (account != null && account.getIdToken() != null) {
+            try {
+                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
+                final LoginResult loginResult = new RestService(sharedPreferences).logInWithGoogle(googleCredentials);
+                handleLoginResult(loginResult, LoggingMethod.GOOGLE);
+            } catch (InterruptedException | ExecutionException e) {
+                Log.e("google loginEditText", "error", e);
+                info.setText("Obtaining server token from Google token failed.");
+            }
         } else {
             Intent signInIntent = googleClientSignIn.getSignInIntent();
             startActivityForResult(signInIntent, R_LOG_IN);
@@ -151,9 +163,16 @@ public class LogInFragment extends Fragment {
             sharedPreferences.edit().putString(SHARED_PREFERENCES_USER_LOGIN, loginResult.getLogin()).commit();
             sharedPreferences.edit().putString(SHARED_PREFERENCES_LOGGING_METHOD, loggingMethod.toString()).apply();
             saveToken(loginResult.getToken());
+            loginEditText.setText("");
+            loginEditTextSignIn.setText("");
+            passwordEditText.setText("");
+            passwordEditTextSignIn.setText("");
             handleLoggedUser();
         } else {
             info.setText(loginResult.getErrorMessage());
+            if (loggingMethod == LoggingMethod.GOOGLE) {
+                googleClientSignIn.signOut();
+            }
         }
     }
 
@@ -179,10 +198,10 @@ public class LogInFragment extends Fragment {
                 info.setText("Exchanging Google token for app token failed.");
             }
         } catch (ApiException e) {
-            Log.e("google login", "signInResult:failed code=" + e.getStatusCode(), e);
+            Log.e("google loginEditText", "signInResult:failed code=" + e.getStatusCode(), e);
             info.setText("Obtaining Google token failed.");
         } catch (InterruptedException | ExecutionException e) {
-            Log.e("google login", "error",  e);
+            Log.e("google loginEditText", "error", e);
             info.setText("Obtaining Google token failed.");
         }
     }
@@ -201,7 +220,7 @@ public class LogInFragment extends Fragment {
             Log.e("google sign in", "signInResult:failed code=" + e.getStatusCode(), e);
             info.setText("Obtaining Google token failed.");
         } catch (InterruptedException | ExecutionException e) {
-            Log.e("google sign in", "error",  e);
+            Log.e("google sign in", "error", e);
             info.setText("Obtaining Google token failed.");
         }
     }
@@ -212,13 +231,9 @@ public class LogInFragment extends Fragment {
         }
     }
 
-
-    private Optional<UserCredentials> getUserCredentialsFromForm(View view, @IdRes int loginId, @IdRes int passwordId) {
-        final EditText login = view.findViewById(loginId);
-        final EditText password = view.findViewById(passwordId);
-
+    private Optional<UserCredentials> getUserCredentialsFromForm(EditText login, EditText password) {
         if (login.getText().toString().isEmpty() || password.getText().toString().isEmpty()) {
-            info.setText("Provide both login and password");
+            info.setText("Provide both loginEditText and password");
             return Optional.empty();
         }
 

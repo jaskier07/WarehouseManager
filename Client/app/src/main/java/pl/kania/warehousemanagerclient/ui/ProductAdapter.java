@@ -68,7 +68,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
                 .quantity(TextParser.parseInt(quantityValue))
                 .build(), this::updateArrayAdapter));
         Button delete = convertView.findViewById(R.id.buttonDelete);
-        delete.setOnClickListener(c ->  new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter, this::showInfoNoPermission));
+        delete.setOnClickListener(c ->  new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter, () -> showInfoNoPermission()));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
         increase.setOnClickListener(c ->  new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
                 TextParser.parseInt(increaseBy)), this::updateArrayAdapter));
@@ -80,7 +80,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
     }
 
     private void showInfoNoPermission() {
-        Toast.makeText(getContext(), "You do not have permission to delete product", Toast.LENGTH_SHORT).show();
+        Toast.makeText(activity.getApplicationContext(), "You do not have permission to delete product", Toast.LENGTH_LONG).show();
     }
 
     private void updateArrayAdapter() {
@@ -100,7 +100,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
                 clear();
                 addAll(r);
                 notifyDataSetChanged();
-                Toast.makeText(getContext(), "Product list has been updated", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Product list has been updated", Toast.LENGTH_LONG).show();
             }
         });
     }
