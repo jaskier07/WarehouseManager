@@ -38,7 +38,7 @@ public class RequestFilter implements Filter {
         } else if (!hasAuthorizationHeader(requestFacade)) {
             responseFacade.setStatus(UNAUTHORIZED_CODE, "Lack of authentication header. Please log in.");
             responseFacade.encodeRedirectURL(environment.getProperty("server.url") + "/login");
-        } else if (resourceAddressStartsWith("/login", requestFacade)) {
+        } else if (resourceAddressStartsWith("/login", requestFacade) || resourceAddressStartsWith("/sign-in", requestFacade)) {
             chain.doFilter(request, response);
         } else {
             Consumer<String> responseStatusSetter = text -> responseFacade.setStatus(UNAUTHORIZED_CODE, text);
