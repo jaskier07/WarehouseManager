@@ -7,9 +7,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import pl.kania.warehousemanager.dao.ClientDetailsRepository;
+import pl.kania.warehousemanager.dao.ProductRepository;
 import pl.kania.warehousemanager.dao.UserRepository;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
+import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.db.User;
 
 @Component
@@ -22,6 +24,9 @@ public class InitialDataLoader implements ApplicationRunner {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     @Autowired
     private ClientDetailsRepository clientRepository;
@@ -43,5 +48,19 @@ public class InitialDataLoader implements ApplicationRunner {
         oauthClientToken.setAccessTokenValidity(10800);
         oauthClientToken.setRefreshTokenValidity(2592000);
         clientRepository.save(oauthClientToken);
+
+        Product samsung = new Product();
+        samsung.setManufacturerName("Samsung");
+        samsung.setModelName("Galaxy s8");
+        samsung.setPrice(19.90D);
+        samsung.setQuantity(5);
+        productRepository.save(samsung);
+
+        Product iphone = new Product();
+        iphone.setManufacturerName("Apple");
+        iphone.setModelName("X");
+        iphone.setQuantity(23);
+        iphone.setPrice(9999.9D);
+        productRepository.save(iphone);
     }
 }

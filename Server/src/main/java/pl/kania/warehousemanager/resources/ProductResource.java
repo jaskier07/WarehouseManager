@@ -16,6 +16,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import pl.kania.warehousemanager.dao.ProductRepository;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.Product;
+import pl.kania.warehousemanager.model.dto.ChangeQuantityResult;
 import pl.kania.warehousemanager.security.JWTService;
 
 import javax.ws.rs.QueryParam;
@@ -57,7 +58,7 @@ public class ProductResource {
             return getResponseUnauthorized();
         }
         if (product == null) {
-            return getResponseEntityNullParameter();
+            return getError();
         }
 
         product.setQuantity(0);
@@ -87,7 +88,7 @@ public class ProductResource {
             return getResponseUnauthorized();
         }
         if (productId == null) {
-            return getResponseEntityNullParameter();
+            return getError();
         }
 
         productDao.deleteById(productId);
@@ -100,34 +101,34 @@ public class ProductResource {
             return getResponseUnauthorized();
         }
         if (quantity == null || productId == null) {
-            return getResponseEntityNullParameter();
+            return getError();
         }
 
         if (productNotExists(productId)) {
-            return ResponseEntity.notFound().build();
+            return getError();
         }
         if (!productDao.increaseProductQuantityBy(quantity, productId)) {
-            return ResponseEntity.unprocessableEntity().build();
+            return getError();
         }
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/product/{productId}/decrease")
-    public ResponseEntity<Void> decreaseProductQuantityBy(@RequestBody Integer quantity, @PathVariable("productId") Long productId, @RequestHeader("Authorization") String header) {
+    public ResponseEntity<ChangeQuantityResult> decreaseProductQuantityBy(@RequestBody Integer quantity, @PathVariable("productId") Long productId, @RequestHeader("Authorization") String header) {
         if (userDoesNotHavePermission(WarehouseRole.EMPLOYEE, header)) {
             return getResponseUnauthorized();
         }
         if (quantity == null || productId == null) {
-            return getResponseEntityNullParameter();
+            return getChangeQuantityError("No quantity or productId");
         }
 
         if (productNotExists(productId)) {
-            return ResponseEntity.notFound().build();
+            return getChangeQuantityError("Product does not exists");
         }
         if (!productDao.decreaseProductQuantityBy(quantity, productId)) {
-            return ResponseEntity.unprocessableEntity().build();
+            return getChangeQuantityError("Cannot decrease product quantity by this value");
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ChangeQuantityResult(true));
     }
 
     @NotNull
@@ -143,7 +144,11 @@ public class ProductResource {
         return !productDao.existsById(productId);
     }
 
-    private ResponseEntity<Void> getResponseEntityNullParameter() {
+    private ResponseEntity<ChangeQuantityResult> getChangeQuantityError(String error) {
+        return ResponseEntity.badRequest().body(new ChangeQuantityResult(false, error));
+    }
+
+    private ResponseEntity<Void> getError() {
         return ResponseEntity.badRequest().build();
     }
 
