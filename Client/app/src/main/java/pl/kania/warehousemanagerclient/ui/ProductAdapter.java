@@ -2,6 +2,7 @@ package pl.kania.warehousemanagerclient.ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,10 +25,12 @@ import pl.kania.warehousemanagerclient.model.ProductQuantity;
 import pl.kania.warehousemanagerclient.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
+import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;
+
 public class ProductAdapter extends ArrayAdapter<Product> {
 
-    private final RestService restService = new RestService();
     private final Activity activity;
+    private SharedPreferences sharedPreferences;
 
     public ProductAdapter(@NonNull Context context, Activity activity) {
         super(context, 0, new ArrayList<>());
@@ -41,6 +44,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.product_list_element_fragment, parent, false);
         }
         Product product = getItem(position);
+        sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
         EditText manufacturerValue = convertView.findViewById(R.id.manufacturerValue);
         manufacturerValue.setText(product.getManufacturerName());
@@ -56,7 +60,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         EditText decreaseBy = convertView.findViewById(R.id.decreaseByValue);
 
         Button update = convertView.findViewById(R.id.buttonUpdate);
-        update.setOnClickListener(c -> restService.updateProduct(Product.builder()
+        update.setOnClickListener(c ->  new RestService(sharedPreferences).updateProduct(Product.builder()
                 .id(TextParser.parseLong(idValue))
                 .manufacturerName(TextParser.getText(manufacturerValue))
                 .modelName(TextParser.getText(modelValue))
@@ -64,19 +68,20 @@ public class ProductAdapter extends ArrayAdapter<Product> {
                 .quantity(TextParser.parseInt(quantityValue))
                 .build(), this::updateArrayAdapter));
         Button delete = convertView.findViewById(R.id.buttonDelete);
-        delete.setOnClickListener(c -> restService.deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter));
+        delete.setOnClickListener(c ->  new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter,
+                () -> Toast.makeText(getContext(), "You do not have permission to delete product", Toast.LENGTH_LONG).show()));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
-        increase.setOnClickListener(c -> restService.increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
+        increase.setOnClickListener(c ->  new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
                 TextParser.parseInt(increaseBy)), this::updateArrayAdapter));
         Button decrease = convertView.findViewById(R.id.buttonDecrease);
-        decrease.setOnClickListener(c -> restService.decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
+        decrease.setOnClickListener(c ->  new RestService(sharedPreferences).decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
                 TextParser.parseInt(decreaseBy)), this::updateArrayAdapter));
 
         return convertView;
     }
 
     private void updateArrayAdapter() {
-        restService.getAllProducts(prod -> updateList(activity).accept(prod));
+        new RestService(sharedPreferences).getAllProducts(prod -> updateList(activity).accept(prod));
     }
 
     private String getNullSafeNumberValue(Number number) {

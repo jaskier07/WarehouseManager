@@ -16,4 +16,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Add new product" />
+
+    <Button
+        android:id="@+id/buttonLogout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Logout" />
+
+    <TextView
+        android:id="@+id/textViewLoggedAs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="-" />
 </LinearLayout>

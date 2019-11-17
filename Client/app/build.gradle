@@ -35,4 +35,5 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.10'
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+    implementation 'com.google.android.gms:play-services-auth:17.0.0'
 }

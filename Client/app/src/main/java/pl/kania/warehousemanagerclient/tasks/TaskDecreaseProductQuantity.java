@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -16,7 +15,8 @@ class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void
 
     private final Runnable afterDecrease;
 
-    TaskDecreaseProductQuantity(Runnable afterDecrease) {
+    TaskDecreaseProductQuantity(String token, Runnable afterDecrease) {
+        super(token);
         this.afterDecrease = afterDecrease;
     }
 
@@ -24,9 +24,7 @@ class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void
     protected Void doInBackground(ProductQuantity... productQuantities) {
         if (productQuantities.length > 0) {
             try {
-                final Request request = getRequest(productQuantities[0]);
-                final Call call = getClient().newCall(request);
-                final Response response = call.execute();
+                final Response response = executeRequest(getRequest(productQuantities[0]));
                 if (response.isSuccessful()) {
                     afterDecrease.run();
                 } else {
@@ -42,6 +40,7 @@ class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void
     private Request getRequest(ProductQuantity productQuantity) throws JsonProcessingException {
         final RequestBody responseBody = RequestBody.create(getMediaType(), getObjectMapper().writeValueAsString(productQuantity.getQuantity()));
         return new Request.Builder()
+                .addHeader(AUTH_HEADER, getAuthValue())
                 .url(BASE_URI_PRODUCT + "/" + productQuantity.getProductId() + "/decrease")
                 .patch(responseBody)
                 .build();

@@ -1,37 +1,66 @@
 package pl.kania.warehousemanagerclient.tasks;
 
+import android.content.SharedPreferences;
+
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
+import pl.kania.warehousemanagerclient.model.LoginResult;
 import pl.kania.warehousemanagerclient.model.Product;
 import pl.kania.warehousemanagerclient.model.ProductQuantity;
+import pl.kania.warehousemanagerclient.model.UserCredentials;
+
+import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_TOKEN;
 
 public class RestService {
 
-    static final String BASE_URI = "http://b7cbc704.ngrok.io";
+    static final String BASE_URI = "http://e3ec4328.ngrok.io";
     static final String BASE_URI_PRODUCT = BASE_URI + "/product";
+    public static final String BASE_URI_LOGIN = BASE_URI + "/login";
+    private SharedPreferences sharedPreferences;
+
+    public RestService(SharedPreferences sharedPreferences) {
+        this.sharedPreferences = sharedPreferences;
+    }
 
     public void getAllProducts(Consumer<List<Product>> updateProducts) {
-        new TaskGetAllProducts(updateProducts).execute();
+        new TaskGetAllProducts(getToken(), updateProducts).execute();
     }
 
     public void addNewProduct(Product product, Runnable afterAdd) {
-        new TaskAddProduct(afterAdd).execute(product);
+        new TaskAddProduct(getToken(), afterAdd).execute(product);
     }
 
-    public void deleteProduct(Long productId, Runnable afterDelete) {
-        new TaskDeleteProduct(afterDelete).execute(productId);
+    public void deleteProduct(Long productId, Runnable afterDelete, Runnable onFailure) {
+        new TaskDeleteProduct(getToken(), afterDelete, onFailure).execute(productId);
     }
 
     public void decreaseProductQuantity(ProductQuantity productQuantity, Runnable afterDecrease) {
-        new TaskDecreaseProductQuantity(afterDecrease).execute(productQuantity);
+        new TaskDecreaseProductQuantity(getToken(), afterDecrease).execute(productQuantity);
     }
 
     public void increaseProductQuantity(ProductQuantity productQuantity, Runnable afterIncrease) {
-        new TaskIncreaseProductQuantity(afterIncrease).execute(productQuantity);
+        new TaskIncreaseProductQuantity(getToken(), afterIncrease).execute(productQuantity);
     }
 
     public void updateProduct(Product product, Runnable afterUpdate) {
-        new TaskUpdateProduct(afterUpdate).execute(product);
+        new TaskUpdateProduct(getToken(), afterUpdate).execute(product);
+    }
+
+    public void exchangeGoogleTokenForAppToken(String token, Consumer<String> afterTokenObtaining) {
+        new TaskExchangeGoogleToken(afterTokenObtaining).execute(token);
+    }
+
+    public boolean checkToken(String token) throws ExecutionException, InterruptedException {
+        return new TaskCheckToken().execute(token).get();
+    }
+
+    public LoginResult exchangeCredentialsForToken(UserCredentials userCredentials) throws ExecutionException, InterruptedException {
+        return new TaskExchangeCredentialsForToken().execute(userCredentials).get();
+    }
+
+    private String getToken() {
+        return sharedPreferences.getString(SHARED_PREFERENCES_TOKEN, "");
     }
 }

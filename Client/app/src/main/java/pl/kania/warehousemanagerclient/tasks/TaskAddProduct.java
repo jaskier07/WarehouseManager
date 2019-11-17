@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -16,7 +15,8 @@ class TaskAddProduct extends AbstractRestTask<Product, Void> {
 
     private final Runnable afterAdd;
 
-    TaskAddProduct(Runnable afterAdd) {
+    TaskAddProduct(String token, Runnable afterAdd) {
+        super(token);
         this.afterAdd = afterAdd;
     }
 
@@ -24,9 +24,7 @@ class TaskAddProduct extends AbstractRestTask<Product, Void> {
     protected Void doInBackground(Product... products) {
         if (products.length > 0) {
             try {
-                final Request request = getRequest(products[0]);
-                final Call call = getClient().newCall(request);
-                final Response response = call.execute();
+                final Response response = executeRequest(getRequest(products[0]));
                 if (response.isSuccessful()) {
                     afterAdd.run();
                 } else {
@@ -43,6 +41,7 @@ class TaskAddProduct extends AbstractRestTask<Product, Void> {
         final RequestBody requestBody = RequestBody.create(getMediaType(), getObjectMapper().writeValueAsString(product));
         return new Request.Builder()
                 .url(BASE_URI_PRODUCT)
+                .addHeader(AUTH_HEADER, getAuthValue())
                 .post(requestBody)
                 .build();
     }

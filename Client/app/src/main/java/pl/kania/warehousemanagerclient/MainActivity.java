@@ -1,8 +1,8 @@
 package pl.kania.warehousemanagerclient;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import pl.kania.warehousemanagerclient.ui.fragments.LogInFragment;
 
@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.main_activity);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.container, LogInFragment.newInstance())
+                    .replace(R.id.container, new LogInFragment())
                     .commitNow();
         }
     }

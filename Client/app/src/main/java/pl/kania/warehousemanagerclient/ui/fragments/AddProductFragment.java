@@ -1,5 +1,7 @@
 package pl.kania.warehousemanagerclient.ui.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,19 +13,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import pl.kania.warehousemanagerclient.model.Product;
 import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.model.Product;
 import pl.kania.warehousemanagerclient.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
+import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;
+
 public class AddProductFragment extends Fragment {
 
-    private RestService restService = new RestService();
+    private SharedPreferences sharedPreferences;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.add_product_fragment, container, false);
+        sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
         EditText manufacturer = view.findViewById(R.id.manufacturerValueAdd);
         EditText model = view.findViewById(R.id.modelValueAdd);
@@ -35,7 +40,7 @@ public class AddProductFragment extends Fragment {
                     .modelName(model.getText().toString())
                     .price(Double.valueOf(price.getText().toString()))
                     .build();
-            restService.addNewProduct(product, () -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager()));
+            new RestService(sharedPreferences).addNewProduct(product, () -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager()));
         });
 
         return view;

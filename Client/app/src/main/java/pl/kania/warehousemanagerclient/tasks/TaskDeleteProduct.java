@@ -10,10 +10,13 @@ import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT
 
 class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
 
-    private final Runnable afterDelete;
+    private final Runnable onSuccess;
+    private final Runnable onFailure;
 
-    TaskDeleteProduct(Runnable afterDelete) {
-        this.afterDelete = afterDelete;
+    TaskDeleteProduct(String token, Runnable onSuccess, Runnable onFailure) {
+        super(token);
+        this.onSuccess = onSuccess;
+        this.onFailure = onFailure;
     }
 
     @Override
@@ -24,8 +27,9 @@ class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
                 final Call call = getClient().newCall(request);
                 final Response response = call.execute();
                 if (response.isSuccessful()) {
-                    afterDelete.run();
+                    onSuccess.run();
                 } else {
+                    onSuccess.run();
                     Log.w("delete", "Product deletion did not complete successfully");
                 }
             } catch (Exception e) {
@@ -37,6 +41,7 @@ class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
 
     private Request getRequest(Long productId) {
         return new Request.Builder()
+                .addHeader(AUTH_HEADER, getAuthValue())
                 .url(BASE_URI_PRODUCT + "/" + productId + "/deletion")
                 .delete()
                 .build();

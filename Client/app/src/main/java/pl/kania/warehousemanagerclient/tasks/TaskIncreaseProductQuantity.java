@@ -16,7 +16,8 @@ class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void
 
     private final Runnable afterIncrease;
 
-    TaskIncreaseProductQuantity(Runnable afterIncrease) {
+    TaskIncreaseProductQuantity(String token, Runnable afterIncrease) {
+        super(token);
         this.afterIncrease = afterIncrease;
     }
 
@@ -42,6 +43,7 @@ class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void
     private Request getRequest(ProductQuantity productQuantity) throws JsonProcessingException {
         final RequestBody responseBody = RequestBody.create(getMediaType(), getObjectMapper().writeValueAsString(productQuantity.getQuantity()));
         return new Request.Builder()
+                .addHeader(AUTH_HEADER, getAuthValue())
                 .url(BASE_URI_PRODUCT + "/" + productQuantity.getProductId() + "/increase")
                 .patch(responseBody)
                 .build();

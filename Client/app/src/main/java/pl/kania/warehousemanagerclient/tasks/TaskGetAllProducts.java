@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -18,18 +17,15 @@ import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
 class TaskGetAllProducts extends AbstractRestTask<Void, List<Product>> {
     private final Consumer<List<Product>> updateProducts;
 
-    TaskGetAllProducts(Consumer<List<Product>> updateProducts) {
+    TaskGetAllProducts(String token, Consumer<List<Product>> updateProducts) {
+        super(token);
         this.updateProducts = updateProducts;
     }
 
     @Override
     protected List<Product> doInBackground(Void... voids) {
         try {
-            final Request request = new Request.Builder()
-                    .url(BASE_URI + "/products")
-                    .build();
-            final Call call = getClient().newCall(request);
-            final Response response = call.execute();
+            final Response response = executeRequest(getRequest());
             final ResponseBody responseBody = response.body();
 
             if (response.isSuccessful() && responseBody != null) {
@@ -41,6 +37,13 @@ class TaskGetAllProducts extends AbstractRestTask<Void, List<Product>> {
             Log.e("getAllProducts", "An error occured while getting all products", e);
         }
         return null;
+    }
+
+    private Request getRequest() {
+        return new Request.Builder()
+                .url(BASE_URI + "/products")
+                .addHeader(AUTH_HEADER, getAuthValue())
+                .build();
     }
 
     @Override
