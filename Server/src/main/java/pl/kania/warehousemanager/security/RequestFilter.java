@@ -30,7 +30,6 @@ public class RequestFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        // TODO tylko https
         final RequestFacade requestFacade = (RequestFacade) request;
         final ResponseFacade responseFacade = (ResponseFacade) response;
         if (resourceAddressStartsWith("/h2-console", requestFacade)) {
@@ -38,7 +37,7 @@ public class RequestFilter implements Filter {
         } else if (!hasAuthorizationHeader(requestFacade)) {
             responseFacade.setStatus(UNAUTHORIZED_CODE, "Lack of authentication header. Please log in.");
             responseFacade.encodeRedirectURL(environment.getProperty("server.url") + "/login");
-        } else if (resourceAddressStartsWith("/login", requestFacade) || resourceAddressStartsWith("/sign-in", requestFacade)) {
+        } else if (resourceAddressIsLogInOrSignIn(requestFacade) || resourceAddresIsLogInOrSignInGoogle(requestFacade)) {
             chain.doFilter(request, response);
         } else {
             Consumer<String> responseStatusSetter = text -> responseFacade.setStatus(UNAUTHORIZED_CODE, text);
@@ -50,6 +49,16 @@ public class RequestFilter implements Filter {
                 }
             }
         }
+    }
+
+    private boolean resourceAddressIsLogInOrSignIn(RequestFacade requestFacade) {
+        return resourceAddressStartsWith("/log-in", requestFacade)
+                || resourceAddressStartsWith("/sign-in", requestFacade);
+    }
+
+    private boolean resourceAddresIsLogInOrSignInGoogle(RequestFacade requestFacade) {
+        return resourceAddressStartsWith("/login-with-google", requestFacade)
+                || resourceAddressStartsWith("/sign-in-with-google", requestFacade);
     }
 
     private boolean resourceAddressStartsWith(String address, RequestFacade requestFacade) {

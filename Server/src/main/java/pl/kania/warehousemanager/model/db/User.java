@@ -28,8 +28,6 @@ public class User {
     @Column(name = "PASSWORD")
     private String password;
 
-//    @ElementCollection(targetClass = WarehouseRole.class)
-//    @CollectionTable(name = "Roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "ROLE")
     private WarehouseRole role;

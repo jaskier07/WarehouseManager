@@ -1,5 +1,6 @@
 package pl.kania.warehousemanager.resources;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -43,15 +44,53 @@ public class AuthorizationResource {
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    @PostMapping(value = "/login-with-google")
-    public ResponseEntity<LoginResult> logInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
-        UserAndClientFromRequest userFromClient = getUserFromClient(authorization, body, false);
+    @PostMapping(value = "/sign-in-with-google")
+    public ResponseEntity<LoginResult> signInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
+        final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization);
+        if (!googleToken.isPresent()) {
+            return getBadRequestResponseEntity("Provide authorization header with JWT token");
+        }
 
-        final String token = createToken(userFromClient);
-        return ResponseEntity.ok(new LoginResult(token, userFromClient.getUser().getLogin()));
+        final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get());
+        if (!payload.isPresent()) {
+            return getBadRequestResponseEntity("Invalid google token");
+        }
+
+        final ClientFromRequest clientFromRequest = getClientFromRequest(body);
+        if (clientFromRequest.getError() != null) {
+            return clientFromRequest.getError();
+        }
+
+        final User userToSave = new User(null, payload.get().getEmail(), null, WarehouseRole.EMPLOYEE);
+        final User savedUser = userRepository.save(userToSave);
+
+        final String jwt = jwtService.createJwt(savedUser, clientFromRequest.getClientDetails());
+        return ResponseEntity.ok(new LoginResult(jwt, savedUser.getLogin()));
     }
 
-    @PostMapping(value = "/login")
+    @PostMapping(value = "/log-in-with-google")
+    public ResponseEntity<LoginResult> logInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
+        final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization);
+        if (!googleToken.isPresent()) {
+            return getBadRequestResponseEntity("Provide authorization header with JWT token");
+        }
+
+        final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get());
+        if (!payload.isPresent()) {
+            return getBadRequestResponseEntity("Invalid google token");
+        }
+
+        final ClientFromRequest clientFromRequest = getClientFromRequest(body);
+        if (clientFromRequest.getError() != null) {
+            return clientFromRequest.getError();
+        }
+
+        final User user = userRepository.findByLogin(payload.get().getEmail());
+        final String jwt = jwtService.createJwt(user, clientFromRequest.getClientDetails());
+        return ResponseEntity.ok(new LoginResult(jwt, user.getLogin()));
+    }
+
+    @PostMapping(value = "/log-in")
     public ResponseEntity<LoginResult> logIn(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
         UserAndClientFromRequest userFromClient = getUserFromClient(authorization, body, true);
         if (userFromClient.error != null) {
@@ -86,8 +125,7 @@ public class AuthorizationResource {
     }
 
     private String createToken(UserAndClientFromRequest userFromClient) {
-        return jwtService.createJwt(userFromClient.getUser(), userFromClient.getClientDetails(),
-                environment.getProperty("server.issuer"), environment.getProperty("server.audience"));
+        return jwtService.createJwt(userFromClient.getUser(), userFromClient.getClientDetails());
     }
 
     private UserAndClientFromRequest getUserFromClient(String authorization, Map<String, String> body, boolean validatePassword) {

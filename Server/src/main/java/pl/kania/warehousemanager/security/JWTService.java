@@ -8,6 +8,12 @@ import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -17,12 +23,16 @@ import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
 import pl.kania.warehousemanager.model.db.User;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+@Slf4j
 @Service
 public class JWTService {
 
@@ -35,11 +45,11 @@ public class JWTService {
     @Autowired
     private HeaderExtractor headerExtractor;
 
-    public String createJwt(User user, ClientDetails clientDetails, String issuer, String audience) {
+    public String createJwt(User user, ClientDetails clientDetails) {
         return JWT.create()
                 .withSubject(user.getId().toString())
-                .withIssuer(issuer)
-                .withAudience(clientDetails.getClientId(), audience)
+                .withIssuer(environment.getProperty("server.issuer"))
+                .withAudience(clientDetails.getClientId(), environment.getProperty("server.audience"))
                 .withExpiresAt(Date.from(LocalDateTime.now().plusDays(7).toInstant(ZoneOffset.UTC)))
                 .withClaim("login", user.getLogin())
                 .withClaim("role", user.getRole().name())
@@ -121,5 +131,26 @@ public class JWTService {
             responseSetter.accept("Invalid claim.");
         }
         return null;
+    }
+
+    public Optional<GoogleIdToken.Payload> verifyGoogleToken(String token) {
+
+        try {
+            HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+            JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(httpTransport, jsonFactory)
+                    .setAudience(Collections.singleton(environment.getProperty("google.app.id")))
+                    .setIssuer(environment.getProperty("google.issuer"))
+//                    .setClock(Clock.SYSTEM)
+                    .build();
+            final GoogleIdToken verify = verifier.verify(token);
+            if (verify == null) {
+                return Optional.empty();
+            }
+            return Optional.of(verify.getPayload());
+        } catch (GeneralSecurityException | IOException e) {
+            log.error("Error connecting to google verificator", e);
+            return Optional.empty();
+        }
     }
 }
