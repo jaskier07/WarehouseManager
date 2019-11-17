@@ -37,8 +37,8 @@ public class RestService {
         new TaskDeleteProduct(getToken(), afterDelete, onFailure).execute(productId);
     }
 
-    public void decreaseProductQuantity(ProductQuantity productQuantity, Runnable afterDecrease) {
-        new TaskDecreaseProductQuantity(getToken(), afterDecrease).execute(productQuantity);
+    public void decreaseProductQuantity(ProductQuantity productQuantity, Runnable afterDecrease, Consumer<String> onFailed) {
+        new TaskDecreaseProductQuantity(getToken(), afterDecrease, onFailed).execute(productQuantity);
     }
 
     public void increaseProductQuantity(ProductQuantity productQuantity, Runnable afterIncrease) {

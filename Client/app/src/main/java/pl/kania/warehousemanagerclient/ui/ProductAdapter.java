@@ -78,9 +78,13 @@ public class ProductAdapter extends ArrayAdapter<Product> {
                 getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
         Button decrease = convertView.findViewById(R.id.buttonDecrease);
         decrease.setOnClickListener(c -> new RestService(sharedPreferences).decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
-                getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
+                getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter, this::showInfo));
 
         return convertView;
+    }
+
+    private void showInfo(String info) {
+        activity.runOnUiThread(() -> Toast.makeText(activity.getApplicationContext(), info, Toast.LENGTH_LONG).show());
     }
 
     private void showInfoInvalidNumber() {
@@ -88,7 +92,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
     }
 
     private void showInfoNoPermission() {
-        Toast.makeText(activity.getApplicationContext(), "You do not have permission to delete product", Toast.LENGTH_LONG).show();
+        activity.runOnUiThread(() -> Toast.makeText(activity.getApplicationContext(), "You do not have permission to delete product", Toast.LENGTH_LONG).show());
     }
 
     private void updateArrayAdapter() {

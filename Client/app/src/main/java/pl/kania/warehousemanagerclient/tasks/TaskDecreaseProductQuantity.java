@@ -4,9 +4,12 @@ import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.util.function.Consumer;
+
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import pl.kania.warehousemanagerclient.model.ChangeQuantityResult;
 import pl.kania.warehousemanagerclient.model.ProductQuantity;
 
 import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
@@ -14,10 +17,12 @@ import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT
 class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void> {
 
     private final Runnable afterDecrease;
+    private final Consumer<String> onFailed;
 
-    TaskDecreaseProductQuantity(String token, Runnable afterDecrease) {
+    TaskDecreaseProductQuantity(String token, Runnable afterDecrease, Consumer<String> onFailed) {
         super(token);
         this.afterDecrease = afterDecrease;
+        this.onFailed = onFailed;
     }
 
     @Override
@@ -28,7 +33,9 @@ class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void
                 if (response.isSuccessful()) {
                     afterDecrease.run();
                 } else {
-                    Log.w("decrease", "Decreasing product's amount did not complete successfully: " + response.code());
+                    ChangeQuantityResult changeQuantityResult = getObjectMapper().readValue(response.body().string(), ChangeQuantityResult.class);
+                    Log.w("decrease", "Decreasing product's amount did not complete successfully: " + changeQuantityResult.getError());
+                    onFailed.accept(changeQuantityResult.getError());
                 }
             } catch (Exception e) {
                 Log.e("decrease", "An error occured while decreasing product's amount", e);
