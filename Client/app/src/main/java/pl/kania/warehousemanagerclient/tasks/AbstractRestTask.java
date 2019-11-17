@@ -16,11 +16,12 @@ import okhttp3.Response;
 
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter(value = AccessLevel.PROTECTED)
-abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
+public abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
 
     protected static final String AUTH_HEADER = "Authorization";
     private static final String MEDIA_TYPE = "application/json; charset=utf-8";
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient.Builder()
+            .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String token;
 

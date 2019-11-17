@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
+import pl.kania.warehousemanagerclient.model.GoogleCredentials;
 import pl.kania.warehousemanagerclient.model.LoginResult;
 import pl.kania.warehousemanagerclient.model.Product;
 import pl.kania.warehousemanagerclient.model.ProductQuantity;
@@ -15,7 +16,7 @@ import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_
 
 public class RestService {
 
-    static final String BASE_URI = "http://e3ec4328.ngrok.io";
+    static final String BASE_URI = "http://c13cf18d.ngrok.io";
     static final String BASE_URI_PRODUCT = BASE_URI + "/product";
     public static final String BASE_URI_LOGIN = BASE_URI + "/login";
     private SharedPreferences sharedPreferences;
@@ -48,8 +49,12 @@ public class RestService {
         new TaskUpdateProduct(getToken(), afterUpdate).execute(product);
     }
 
-    public void exchangeGoogleTokenForAppToken(String token, Consumer<String> afterTokenObtaining) {
-        new TaskExchangeGoogleToken(afterTokenObtaining).execute(token);
+    public LoginResult logInWithGoogle(GoogleCredentials credentials) throws ExecutionException, InterruptedException {
+       return new TaskLogInWithGoogle().execute(credentials).get();
+    }
+
+    public LoginResult signInWithGoogle(GoogleCredentials credentials) throws ExecutionException, InterruptedException {
+        return new TaskSignInWithGoogle().execute(credentials).get();
     }
 
     public boolean checkToken(String token) throws ExecutionException, InterruptedException {
@@ -57,7 +62,7 @@ public class RestService {
     }
 
     public LoginResult exchangeCredentialsForToken(UserCredentials userCredentials) throws ExecutionException, InterruptedException {
-        return new TaskExchangeCredentialsForToken().execute(userCredentials).get();
+        return new TaskLogIn().execute(userCredentials).get();
     }
 
     private String getToken() {

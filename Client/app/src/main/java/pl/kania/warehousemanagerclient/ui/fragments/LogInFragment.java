@@ -1,6 +1,5 @@
 package pl.kania.warehousemanagerclient.ui.fragments;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,6 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -26,9 +26,12 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.model.GoogleCredentials;
+import pl.kania.warehousemanagerclient.model.LoggingMethod;
 import pl.kania.warehousemanagerclient.model.LoginResult;
 import pl.kania.warehousemanagerclient.model.UserCredentials;
 import pl.kania.warehousemanagerclient.tasks.RestService;
@@ -39,11 +42,15 @@ public class LogInFragment extends Fragment {
     public static final String SHARED_PREFERENCES_NAME = "com.kania.warehousemanager.client";
     public static final String SHARED_PREFERENCES_TOKEN = SHARED_PREFERENCES_NAME + "token";
     static final String SHARED_PREFERENCES_USER_LOGIN = SHARED_PREFERENCES_NAME + "userLogin";
-    private static final int R_SIGN_IN = 1;
+    static final String SHARED_PREFERENCES_LOGGING_METHOD = SHARED_PREFERENCES_NAME + "loggingMethod";
+    private static final int R_LOG_IN = 1;
+    private static final int R_SIGN_IN = 2;
     private SharedPreferences sharedPreferences;
     private TextView info;
     private String clientId;
     private String clientSecret;
+    private String googleClientId;
+    private GoogleSignInClient googleClientSignIn;
 
     @Nullable
     @Override
@@ -57,7 +64,13 @@ public class LogInFragment extends Fragment {
         sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
         clientId = getContext().getString(R.string.client_id);
         clientSecret =  getContext().getString(R.string.client_secret);
+        googleClientId =  getContext().getString(R.string.google_client_id);
         final String token = sharedPreferences.getString(SHARED_PREFERENCES_TOKEN, null);
+        final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestIdToken(googleClientId)
+                .build();
+        googleClientSignIn = GoogleSignIn.getClient(getContext(), gso);
 
         if (token != null) {
             try {
@@ -82,60 +95,41 @@ public class LogInFragment extends Fragment {
     }
 
     private void handleNotLoggedUser(View view) {
+        info.setText("You are not logged");
+
         final Button buttonLogIn = view.findViewById(R.id.buttonLogIn);
-        buttonLogIn.setOnClickListener(v -> actionLogIn(view));
+        buttonLogIn.setOnClickListener(c -> getUserCredentialsFromForm(view, R.id.loginValueLogIn, R.id.passwordValueLogIn)
+                .ifPresent(this::actionLogIn));
 
         final Button buttonSignIn = view.findViewById(R.id.buttonSignIn);
-        buttonSignIn.setOnClickListener(c -> actionSignIn(view));
+        buttonSignIn.setOnClickListener(c -> getUserCredentialsFromForm(view, R.id.loginValueSignIn, R.id.passwordValueSignIn)
+                .ifPresent(this::actionSignIn));
 
-        final SignInButton buttonGoogle = view.findViewById(R.id.buttonLogInGoogle);
-        buttonGoogle.setOnClickListener(c -> actionLogInWithGoogle());
+        final SignInButton buttonGoogleLogIn = view.findViewById(R.id.buttonLogInGoogle);
+        buttonGoogleLogIn.setOnClickListener(c -> actionLogInWithGoogle());
 
-        info.setText("You are not logged");
+        final SignInButton buttonGooogleSignIn = view.findViewById(R.id.buttonSignInGoogle);
+        buttonGooogleSignIn.setOnClickListener(c -> {
+            Intent signInIntent = googleClientSignIn.getSignInIntent();
+            startActivityForResult(signInIntent, R_SIGN_IN);
+        });
+
     }
 
-    private void actionSignIn(View view) {
-        final EditText login = view.findViewById(R.id.loginValueSignIn);
-        final EditText password = view.findViewById(R.id.passwordValueSignIn);
-
-        if (login.getText().toString().isEmpty() || password.getText().toString().isEmpty()) {
-            info.setText("Provide both login and password");
-            return;
-        }
-
-        final UserCredentials userCredentials = new UserCredentials(login.getText().toString(), password.getText().toString(), clientId, clientSecret);
+    private void actionSignIn(UserCredentials userCredentials) {
         try {
             LoginResult loginResult = new RestService(sharedPreferences).signIn(userCredentials);
-            if (loginResult.getErrorMessage() == null) {
-                sharedPreferences.edit().putString(SHARED_PREFERENCES_USER_LOGIN, loginResult.getLogin()).commit();
-                saveToken(loginResult.getToken());
-                handleLoggedUser();
-            } else {
-                info.setText(loginResult.getErrorMessage());
-            }
+            handleLoginResult(loginResult, LoggingMethod.DEFAULT);
         } catch (ExecutionException | InterruptedException e) {
             Log.e("actionSignIn", "An error occured while signing in user", e);
             info.setText("An error occured while signing in");
         }
     }
 
-    private void actionLogIn(View view) {
-        final EditText login = view.findViewById(R.id.loginValueLogIn);
-        final EditText password = view.findViewById(R.id.passwordValueLogIn);
-        if (login.getText().toString().isEmpty() || password.getText().toString().isEmpty()) {
-            info.setText("Provide both login and password");
-            return;
-        }
-        final UserCredentials userCredentials = new UserCredentials(login.getText().toString(), password.getText().toString(), clientId, clientSecret);
+    private void actionLogIn(UserCredentials userCredentials) {
         try {
             LoginResult loginResult = new RestService(sharedPreferences).exchangeCredentialsForToken(userCredentials);
-            if (loginResult.getErrorMessage() == null) {
-                sharedPreferences.edit().putString(SHARED_PREFERENCES_USER_LOGIN, loginResult.getLogin()).commit();
-                saveToken(loginResult.getToken());
-                handleLoggedUser();
-            } else {
-                info.setText(loginResult.getErrorMessage());
-            }
+            handleLoginResult(loginResult, LoggingMethod.DEFAULT);
         } catch (ExecutionException | InterruptedException e) {
             Log.e("actionLogIn", "An error occured while exchanging user credentials for token", e);
             info.setText("An error occured while logging in");
@@ -143,41 +137,71 @@ public class LogInFragment extends Fragment {
     }
 
     private void actionLogInWithGoogle() {
-        final String clientId = getContext().getString(R.string.google_client_id);
-        final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-//                .requestScopes(new Scope("openid"))
-                .requestIdToken(clientId)
-                .build();
-        GoogleSignInClient client = GoogleSignIn.getClient(getContext(), gso);
-
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
         if (account != null) {
-            client.signOut().addOnCompleteListener(a -> Toast.makeText(getContext(), "Logged out", Toast.LENGTH_LONG).show());
+            googleClientSignIn.signOut().addOnCompleteListener(a -> Toast.makeText(getContext(), "Logged out", Toast.LENGTH_LONG).show());
         } else {
-            Intent signInIntent = client.getSignInIntent();
-            startActivityForResult(signInIntent, R_SIGN_IN);
+            Intent signInIntent = googleClientSignIn.getSignInIntent();
+            startActivityForResult(signInIntent, R_LOG_IN);
+        }
+    }
+
+    private void handleLoginResult(LoginResult loginResult, LoggingMethod loggingMethod) {
+        if (loginResult.getErrorMessage() == null) {
+            sharedPreferences.edit().putString(SHARED_PREFERENCES_USER_LOGIN, loginResult.getLogin()).commit();
+            sharedPreferences.edit().putString(SHARED_PREFERENCES_LOGGING_METHOD, loggingMethod.toString()).apply();
+            saveToken(loginResult.getToken());
+            handleLoggedUser();
+        } else {
+            info.setText(loginResult.getErrorMessage());
         }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == R_SIGN_IN) {
+        if (requestCode == R_LOG_IN) {
             final Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            handleSignInResult(task);
+            handleLogInWithGoogleResult(task);
+        } else if (requestCode == R_SIGN_IN) {
+            final Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInWithGoogleResult(task);
         }
     }
 
-    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+    private void handleLogInWithGoogleResult(Task<GoogleSignInAccount> completedTask) {
         try {
             final GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null && account.getIdToken() != null) {
-                new RestService(sharedPreferences).exchangeGoogleTokenForAppToken(account.getIdToken(), this::saveToken);
+                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
+                final LoginResult loginResult = new RestService(sharedPreferences).logInWithGoogle(googleCredentials);
+                handleLoginResult(loginResult, LoggingMethod.GOOGLE);
             } else {
                 info.setText("Exchanging Google token for app token failed.");
             }
         } catch (ApiException e) {
-            Log.e(ContentValues.TAG, "signInResult:failed code=" + e.getStatusCode(), e);
+            Log.e("google login", "signInResult:failed code=" + e.getStatusCode(), e);
+            info.setText("Obtaining Google token failed.");
+        } catch (InterruptedException | ExecutionException e) {
+            Log.e("google login", "error",  e);
+            info.setText("Obtaining Google token failed.");
+        }
+    }
+
+    private void handleSignInWithGoogleResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            final GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            if (account != null && account.getIdToken() != null) {
+                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
+                final LoginResult loginResult = new RestService(sharedPreferences).signInWithGoogle(googleCredentials);
+                handleLoginResult(loginResult, LoggingMethod.GOOGLE);
+            } else {
+                info.setText("Exchanging Google token for app token failed.");
+            }
+        } catch (ApiException e) {
+            Log.e("google sign in", "signInResult:failed code=" + e.getStatusCode(), e);
+            info.setText("Obtaining Google token failed.");
+        } catch (InterruptedException | ExecutionException e) {
+            Log.e("google sign in", "error",  e);
             info.setText("Obtaining Google token failed.");
         }
     }
@@ -188,5 +212,17 @@ public class LogInFragment extends Fragment {
         }
     }
 
+
+    private Optional<UserCredentials> getUserCredentialsFromForm(View view, @IdRes int loginId, @IdRes int passwordId) {
+        final EditText login = view.findViewById(loginId);
+        final EditText password = view.findViewById(passwordId);
+
+        if (login.getText().toString().isEmpty() || password.getText().toString().isEmpty()) {
+            info.setText("Provide both login and password");
+            return Optional.empty();
+        }
+
+        return Optional.of(new UserCredentials(login.getText().toString(), password.getText().toString(), clientId, clientSecret));
+    }
 
 }
