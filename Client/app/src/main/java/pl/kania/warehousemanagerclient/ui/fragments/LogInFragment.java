@@ -39,7 +39,7 @@ public class LogInFragment extends Fragment {
 
     public static final String SHARED_PREFERENCES_NAME = "com.kania.warehousemanager.client";
     public static final String SHARED_PREFERENCES_TOKEN = SHARED_PREFERENCES_NAME + "token";
-    static final String SHARED_PREFERENCES_USER_LOGIN = SHARED_PREFERENCES_NAME + "userLogin";
+    public static final String SHARED_PREFERENCES_USER_LOGIN = SHARED_PREFERENCES_NAME + "userLogin";
     static final String SHARED_PREFERENCES_LOGGING_METHOD = SHARED_PREFERENCES_NAME + "loggingMethod";
     private static final int R_LOG_IN = 1;
     private static final int R_SIGN_IN = 2;
@@ -97,7 +97,7 @@ public class LogInFragment extends Fragment {
 
     private void handleLoggedUser() {
         info.setText("User is loggged.");
-        FragmentLoader.load(new MenuFragment(googleClientSignIn), getFragmentManager());
+        FragmentLoader.load(new MenuFragment(googleClientSignIn), getFragmentManager(), sharedPreferences);
     }
 
     private void handleNotLoggedUser(View view) {
@@ -233,7 +233,7 @@ public class LogInFragment extends Fragment {
 
     private Optional<UserCredentials> getUserCredentialsFromForm(EditText login, EditText password) {
         if (login.getText().toString().isEmpty() || password.getText().toString().isEmpty()) {
-            info.setText("Provide both loginEditText and password");
+            info.setText("Provide both login and password");
             return Optional.empty();
         }
 

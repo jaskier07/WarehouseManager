@@ -41,9 +41,9 @@ public class MenuFragment extends Fragment {
         sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
         final Button addProduct = view.findViewById(R.id.buttonGoToAddProduct);
-        addProduct.setOnClickListener(k -> FragmentLoader.load(new AddProductFragment(), getFragmentManager()));
+        addProduct.setOnClickListener(k -> FragmentLoader.load(new AddProductFragment(), getFragmentManager(), sharedPreferences));
         final Button productList = view.findViewById(R.id.buttonGoToProductList);
-        productList.setOnClickListener(k -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager()));
+        productList.setOnClickListener(k -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager(), sharedPreferences));
         final String userLogin = sharedPreferences.getString(SHARED_PREFERENCES_USER_LOGIN, "unlogged user!");
         final TextView loggedAs = view.findViewById(R.id.textViewLoggedAs);
         loggedAs.setText("You are logged as " + userLogin);
@@ -57,7 +57,6 @@ public class MenuFragment extends Fragment {
     private void actionLogout() {
         sharedPreferences.edit().putString(SHARED_PREFERENCES_TOKEN, null).commit();
         Toast.makeText(getContext(), "You have been logged out", Toast.LENGTH_LONG).show();
-        FragmentLoader.load(new LogInFragment(), getFragmentManager());
 
         String loggingMethod = sharedPreferences.getString(SHARED_PREFERENCES_LOGGING_METHOD, null);
         if (loggingMethod != null) {
@@ -65,5 +64,6 @@ public class MenuFragment extends Fragment {
                 googleClientSignIn.signOut().addOnCompleteListener(a -> Toast.makeText(getContext(), "Logged out", Toast.LENGTH_LONG).show());
             }
         }
+        FragmentLoader.load(new LogInFragment(), getFragmentManager(), sharedPreferences);
     }
 }

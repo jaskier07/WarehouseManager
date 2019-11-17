@@ -26,6 +26,8 @@ import pl.kania.warehousemanagerclient.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
 import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;
+import static pl.kania.warehousemanagerclient.utils.TextParser.getValidDoubleValue;
+import static pl.kania.warehousemanagerclient.utils.TextParser.getValidIntegerValue;
 
 public class ProductAdapter extends ArrayAdapter<Product> {
 
@@ -60,23 +62,29 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         EditText decreaseBy = convertView.findViewById(R.id.decreaseByValue);
 
         Button update = convertView.findViewById(R.id.buttonUpdate);
-        update.setOnClickListener(c ->  new RestService(sharedPreferences).updateProduct(Product.builder()
-                .id(TextParser.parseLong(idValue))
-                .manufacturerName(TextParser.getText(manufacturerValue))
-                .modelName(TextParser.getText(modelValue))
-                .price(TextParser.parseDouble(priceValue))
-                .quantity(TextParser.parseInt(quantityValue))
-                .build(), this::updateArrayAdapter));
+        update.setOnClickListener(c -> new RestService(sharedPreferences).updateProduct(
+                Product.builder()
+                        .id(TextParser.parseLong(idValue))
+                        .manufacturerName(TextParser.getText(manufacturerValue))
+                        .modelName(TextParser.getText(modelValue))
+                        .price(getValidDoubleValue(priceValue, this::showInfoInvalidNumber))
+                        .quantity(TextParser.parseInt(quantityValue))
+                        .build(), this::updateArrayAdapter));
         Button delete = convertView.findViewById(R.id.buttonDelete);
-        delete.setOnClickListener(c ->  new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter, () -> showInfoNoPermission()));
+        delete.setOnClickListener(c -> new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter,
+                this::showInfoNoPermission));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
-        increase.setOnClickListener(c ->  new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
-                TextParser.parseInt(increaseBy)), this::updateArrayAdapter));
+        increase.setOnClickListener(c -> new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
+                getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
         Button decrease = convertView.findViewById(R.id.buttonDecrease);
-        decrease.setOnClickListener(c ->  new RestService(sharedPreferences).decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
-                TextParser.parseInt(decreaseBy)), this::updateArrayAdapter));
+        decrease.setOnClickListener(c -> new RestService(sharedPreferences).decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
+                getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
 
         return convertView;
+    }
+
+    private void showInfoInvalidNumber() {
+        Toast.makeText(activity.getApplicationContext(), "Enter valid number (> 0)", Toast.LENGTH_LONG).show();
     }
 
     private void showInfoNoPermission() {

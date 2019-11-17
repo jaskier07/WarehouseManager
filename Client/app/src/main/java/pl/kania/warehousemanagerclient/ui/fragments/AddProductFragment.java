@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,6 +18,7 @@ import pl.kania.warehousemanagerclient.R;
 import pl.kania.warehousemanagerclient.model.Product;
 import pl.kania.warehousemanagerclient.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
+import pl.kania.warehousemanagerclient.utils.TextParser;
 
 import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;
 
@@ -35,14 +37,22 @@ public class AddProductFragment extends Fragment {
         EditText price = view.findViewById(R.id.priceValueAdd);
         Button addNewProduct = view.findViewById(R.id.buttonAddNewProduct);
         addNewProduct.setOnClickListener(c -> {
-            Product product = Product.builder()
-                    .manufacturerName(manufacturer.getText().toString())
-                    .modelName(model.getText().toString())
-                    .price(Double.valueOf(price.getText().toString()))
-                    .build();
-            new RestService(sharedPreferences).addNewProduct(product, () -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager()));
+            if (TextParser.isValidNumber(price)) {
+                Product product = Product.builder()
+                        .manufacturerName(manufacturer.getText().toString())
+                        .modelName(model.getText().toString())
+                        .price(TextParser.parseDouble(price))
+                        .build();
+                new RestService(sharedPreferences).addNewProduct(product, () -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager(), sharedPreferences));
+            } else {
+                showInfoInvalidNumber();
+            }
         });
 
         return view;
+    }
+
+    private void showInfoInvalidNumber() {
+        Toast.makeText(getContext().getApplicationContext(), "Enter valid number (> 0)", Toast.LENGTH_LONG).show();
     }
 }

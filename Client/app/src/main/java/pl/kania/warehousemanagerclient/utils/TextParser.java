@@ -40,4 +40,37 @@ public class TextParser {
     private static boolean isNull(TextView textView) {
         return textView == null || textView.getText() == null;
     }
+
+    public static Integer getValidIntegerValue(EditText priceValue, Runnable onInvalidNumber) {
+        try {
+            Integer number = parseInt(priceValue);
+            if (number != null && number > 0) {
+                return number;
+            }
+        } catch (Exception e) {
+        }
+        onInvalidNumber.run();
+        return 0;
+    }
+
+    public static Double getValidDoubleValue(EditText priceValue, Runnable onInvalidNumber) {
+        try {
+            Double number = parseDouble(priceValue);
+            if (number != null && number > 0) {
+                return number;
+            }
+        } catch (Exception e) {
+        }
+        onInvalidNumber.run();
+        return 0D;
+    }
+
+    public static boolean isValidNumber(EditText priceValue) {
+        try {
+            Double number = parseDouble(priceValue);
+            return number != null && number > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
