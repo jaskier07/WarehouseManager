@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,15 +42,21 @@ public class LogInFragment extends Fragment {
     private static final int R_SIGN_IN = 1;
     private SharedPreferences sharedPreferences;
     private TextView info;
+    private String clientId;
+    private String clientSecret;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.log_in_fragment, container, false);
+
         info = view.findViewById(R.id.log_in_info);
         info.setText("-");
+
         sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+        clientId = getContext().getString(R.string.client_id);
+        clientSecret =  getContext().getString(R.string.client_secret);
         final String token = sharedPreferences.getString(SHARED_PREFERENCES_TOKEN, null);
 
         if (token != null) {
@@ -77,29 +83,49 @@ public class LogInFragment extends Fragment {
 
     private void handleNotLoggedUser(View view) {
         final Button buttonLogIn = view.findViewById(R.id.buttonLogIn);
-        buttonLogIn.setOnClickListener(v -> signIn(view));
+        buttonLogIn.setOnClickListener(v -> actionLogIn(view));
+
         final Button buttonSignIn = view.findViewById(R.id.buttonSignIn);
-        buttonSignIn.setOnClickListener(c -> {
-            Uri loginUri = Uri.parse(RestService.BASE_URI_LOGIN);
-            Intent intent = new Intent(Intent.ACTION_VIEW, loginUri);
-            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
-                startActivity(intent);
-            }
-        });
+        buttonSignIn.setOnClickListener(c -> actionSignIn(view));
+
         final SignInButton buttonGoogle = view.findViewById(R.id.buttonLogInGoogle);
-        buttonGoogle.setOnClickListener(c -> signInWithGoogle());
+        buttonGoogle.setOnClickListener(c -> actionLogInWithGoogle());
+
         info.setText("You are not logged");
     }
 
-    private void signIn(View view) {
+    private void actionSignIn(View view) {
+        final EditText login = view.findViewById(R.id.loginValueSignIn);
+        final EditText password = view.findViewById(R.id.passwordValueSignIn);
+
+        if (login.getText().toString().isEmpty() || password.getText().toString().isEmpty()) {
+            info.setText("Provide both login and password");
+            return;
+        }
+
+        final UserCredentials userCredentials = new UserCredentials(login.getText().toString(), password.getText().toString(), clientId, clientSecret);
+        try {
+            LoginResult loginResult = new RestService(sharedPreferences).signIn(userCredentials);
+            if (loginResult.getErrorMessage() == null) {
+                sharedPreferences.edit().putString(SHARED_PREFERENCES_USER_LOGIN, loginResult.getLogin()).commit();
+                saveToken(loginResult.getToken());
+                handleLoggedUser();
+            } else {
+                info.setText(loginResult.getErrorMessage());
+            }
+        } catch (ExecutionException | InterruptedException e) {
+            Log.e("actionSignIn", "An error occured while signing in user", e);
+            info.setText("An error occured while signing in");
+        }
+    }
+
+    private void actionLogIn(View view) {
         final EditText login = view.findViewById(R.id.loginValueLogIn);
         final EditText password = view.findViewById(R.id.passwordValueLogIn);
         if (login.getText().toString().isEmpty() || password.getText().toString().isEmpty()) {
             info.setText("Provide both login and password");
             return;
         }
-        final String clientId = getContext().getString(R.string.client_id);
-        final String clientSecret = getContext().getString(R.string.client_secret);
         final UserCredentials userCredentials = new UserCredentials(login.getText().toString(), password.getText().toString(), clientId, clientSecret);
         try {
             LoginResult loginResult = new RestService(sharedPreferences).exchangeCredentialsForToken(userCredentials);
@@ -111,23 +137,23 @@ public class LogInFragment extends Fragment {
                 info.setText(loginResult.getErrorMessage());
             }
         } catch (ExecutionException | InterruptedException e) {
-            Log.e("signIn", "An error occured while exchanging user credentials for token", e);
+            Log.e("actionLogIn", "An error occured while exchanging user credentials for token", e);
             info.setText("An error occured while logging in");
         }
     }
 
-    private void signInWithGoogle() {
+    private void actionLogInWithGoogle() {
         final String clientId = getContext().getString(R.string.google_client_id);
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
 //                .requestScopes(new Scope("openid"))
-                .requestServerAuthCode(clientId)
+                .requestIdToken(clientId)
                 .build();
         GoogleSignInClient client = GoogleSignIn.getClient(getContext(), gso);
 
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
         if (account != null) {
-            // TODO
+            client.signOut().addOnCompleteListener(a -> Toast.makeText(getContext(), "Logged out", Toast.LENGTH_LONG).show());
         } else {
             Intent signInIntent = client.getSignInIntent();
             startActivityForResult(signInIntent, R_SIGN_IN);

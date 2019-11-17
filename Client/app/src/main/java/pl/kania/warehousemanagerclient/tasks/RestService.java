@@ -63,4 +63,8 @@ public class RestService {
     private String getToken() {
         return sharedPreferences.getString(SHARED_PREFERENCES_TOKEN, "");
     }
+
+    public LoginResult signIn(UserCredentials userCredentials) throws ExecutionException, InterruptedException {
+        return new TaskSignIn().execute(userCredentials).get();
+    }
 }

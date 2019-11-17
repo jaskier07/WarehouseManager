@@ -29,7 +29,7 @@ class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
                 if (response.isSuccessful()) {
                     onSuccess.run();
                 } else {
-                    onSuccess.run();
+                    onFailure.run();
                     Log.w("delete", "Product deletion did not complete successfully");
                 }
             } catch (Exception e) {

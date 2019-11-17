@@ -69,7 +69,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
                 .build(), this::updateArrayAdapter));
         Button delete = convertView.findViewById(R.id.buttonDelete);
         delete.setOnClickListener(c ->  new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter,
-                () -> Toast.makeText(getContext(), "You do not have permission to delete product", Toast.LENGTH_LONG).show()));
+                () -> Toast.makeText(getContext(), "You do not have permission to delete product", Toast.LENGTH_SHORT).show()));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
         increase.setOnClickListener(c ->  new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
                 TextParser.parseInt(increaseBy)), this::updateArrayAdapter));
