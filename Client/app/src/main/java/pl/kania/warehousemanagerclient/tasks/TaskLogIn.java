@@ -36,7 +36,6 @@ public class TaskLogIn extends AbstractRestTask<UserCredentials, LoginResult> {
     }
 
     private Request getRequest(UserCredentials credentials) {
-        // TODO sprawdzić czy można bezpieczniej przekazywać secret
         final RequestBody requestBody = new FormBody.Builder()
                 .add("clientId", credentials.getClientId())
                 .add("clientSecret", credentials.getClientSecret())
