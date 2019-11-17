@@ -27,8 +27,10 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -58,7 +60,7 @@ public class JWTService {
     }
 
     public boolean hasRole(WarehouseRole requiredRole, String header) {
-        final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
+        final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header, new ArrayList<>());
         if (!token.isPresent()) {
             return false;
         }
@@ -79,7 +81,7 @@ public class JWTService {
     }
 
     public boolean checkPermissions(String header, Consumer<String> responseSetter) {
-        final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
+        final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header, new ArrayList<>());
         if (!token.isPresent()) {
             responseSetter.accept("No token in authorization header");
             return false;
@@ -133,23 +135,23 @@ public class JWTService {
         return null;
     }
 
-    public Optional<GoogleIdToken.Payload> verifyGoogleToken(String token) {
-
+    public Optional<GoogleIdToken.Payload> verifyGoogleToken(String token, List<String> errors) {
         try {
             HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
             JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(httpTransport, jsonFactory)
                     .setAudience(Collections.singleton(environment.getProperty("google.app.id")))
                     .setIssuer(environment.getProperty("google.issuer"))
-//                    .setClock(Clock.SYSTEM)
                     .build();
             final GoogleIdToken verify = verifier.verify(token);
             if (verify == null) {
+                errors.add("Provided Google token is not valid");
                 return Optional.empty();
             }
             return Optional.of(verify.getPayload());
         } catch (GeneralSecurityException | IOException e) {
             log.error("Error connecting to google verificator", e);
+            errors.add("Error connecting to google verificator");
             return Optional.empty();
         }
     }

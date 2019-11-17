@@ -1,7 +1,7 @@
 package pl.kania.warehousemanager.resources;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import lombok.Data;
+import lombok.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +21,8 @@ import pl.kania.warehousemanager.model.db.User;
 import pl.kania.warehousemanager.model.dto.LoginResult;
 import pl.kania.warehousemanager.security.JWTService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,81 +48,98 @@ public class AuthorizationResource {
 
     @PostMapping(value = "/sign-in-with-google")
     public ResponseEntity<LoginResult> signInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
-        final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization);
+        final List<String> errors = new ArrayList<>();
+        final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization, errors);
+
         if (!googleToken.isPresent()) {
-            return getBadRequestResponseEntity("Provide authorization header with JWT token");
+            return getErrorRequest(errors);
         }
 
-        final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get());
+        final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get(), errors);
         if (!payload.isPresent()) {
-            return getBadRequestResponseEntity("Invalid google token");
+            return getErrorRequest(errors);
         }
 
-        final ClientFromRequest clientFromRequest = getClientFromRequest(body);
-        if (clientFromRequest.getError() != null) {
-            return clientFromRequest.getError();
+        final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
+        if (!clientFromRequest.isPresent()) {
+            return getErrorRequest(errors);
+        }
+
+        if (userRepository.findByLogin(payload.get().getEmail()) != null) {
+            errors.add("User with this login already exists");
+            return getErrorRequest(errors);
         }
 
         final User userToSave = new User(null, payload.get().getEmail(), null, WarehouseRole.EMPLOYEE);
         final User savedUser = userRepository.save(userToSave);
 
-        final String jwt = jwtService.createJwt(savedUser, clientFromRequest.getClientDetails());
+        final String jwt = jwtService.createJwt(savedUser, clientFromRequest.get());
         return ResponseEntity.ok(new LoginResult(jwt, savedUser.getLogin()));
     }
 
     @PostMapping(value = "/log-in-with-google")
     public ResponseEntity<LoginResult> logInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
-        final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization);
+        final List<String> errors = new ArrayList<>();
+        final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization, errors);
         if (!googleToken.isPresent()) {
-            return getBadRequestResponseEntity("Provide authorization header with JWT token");
+            return getErrorRequest(errors);
         }
 
-        final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get());
+        final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get(), errors);
         if (!payload.isPresent()) {
-            return getBadRequestResponseEntity("Invalid google token");
+            return getErrorRequest(errors);
         }
 
-        final ClientFromRequest clientFromRequest = getClientFromRequest(body);
-        if (clientFromRequest.getError() != null) {
-            return clientFromRequest.getError();
+        final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
+        if (!clientFromRequest.isPresent()) {
+            return getErrorRequest(errors);
         }
 
         final User user = userRepository.findByLogin(payload.get().getEmail());
-        final String jwt = jwtService.createJwt(user, clientFromRequest.getClientDetails());
+        if (user == null) {
+            errors.add("User not found");
+            return getErrorRequest(errors);
+        }
+
+        final String jwt = jwtService.createJwt(user, clientFromRequest.get());
+
         return ResponseEntity.ok(new LoginResult(jwt, user.getLogin()));
     }
 
     @PostMapping(value = "/log-in")
     public ResponseEntity<LoginResult> logIn(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
-        UserAndClientFromRequest userFromClient = getUserFromClient(authorization, body, true);
-        if (userFromClient.error != null) {
-            return userFromClient.getError();
+        final List<String> errors = new ArrayList<>();
+        Optional<UserAndClientFromRequest> userFromClient = getUserFromClient(authorization, body, errors, true);
+        if (!userFromClient.isPresent()) {
+            return getErrorRequest(errors);
         }
 
-        final String token = createToken(userFromClient);
-        return ResponseEntity.ok(new LoginResult(token, userFromClient.getUser().getLogin()));
+        final String token = createToken(userFromClient.get());
+        return ResponseEntity.ok(new LoginResult(token, userFromClient.get().getUser().getLogin()));
     }
 
     @PostMapping(value = "/sign-in")
     public ResponseEntity<LoginResult> signIn(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
-        final Optional<UserCredentials> credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization);
+        final List<String> errors = new ArrayList<>();
+        final Optional<UserCredentials> credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
         if (!credentials.isPresent()) {
-            return getBadRequestResponseEntity("Provide credentials in proper format");
+            return getErrorRequest(errors);
         }
 
-        final ClientFromRequest clientFromRequest = getClientFromRequest(body);
-        if (clientFromRequest.error != null) {
-            return clientFromRequest.getError();
+        final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
+        if (!clientFromRequest.isPresent()) {
+            return getErrorRequest(errors);
         }
 
         if (userRepository.findByLogin(credentials.get().getLogin()) != null) {
-            return getBadRequestResponseEntity("User with this login already exists");
+            errors.add("User with this login already exists");
+            return getErrorRequest(errors);
         }
 
         final User userToSave = new User(null, credentials.get().getLogin(), passwordEncoder.encode(credentials.get().getPassword()), WarehouseRole.EMPLOYEE);
         final User savedUser = userRepository.save(userToSave);
 
-        final String token = createToken(new UserAndClientFromRequest(savedUser, clientFromRequest.getClientDetails()));
+        final String token = createToken(new UserAndClientFromRequest(savedUser, clientFromRequest.get()));
         return ResponseEntity.ok(new LoginResult(token, savedUser.getLogin()));
     }
 
@@ -128,86 +147,67 @@ public class AuthorizationResource {
         return jwtService.createJwt(userFromClient.getUser(), userFromClient.getClientDetails());
     }
 
-    private UserAndClientFromRequest getUserFromClient(String authorization, Map<String, String> body, boolean validatePassword) {
-        final Optional<UserCredentials> credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization);
+    private Optional<UserAndClientFromRequest> getUserFromClient(String authorization, Map<String, String> body, List<String> errors, boolean validatePassword) {
+        final Optional<UserCredentials> credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
         if (!credentials.isPresent()) {
-            return new UserAndClientFromRequest(getBadRequestResponseEntity("Provide credentials in proper format"));
+            return Optional.empty();
         }
 
-        ClientFromRequest clientFromRequest = getClientFromRequest(body);
-        if (clientFromRequest.error != null) {
-            return new UserAndClientFromRequest(clientFromRequest.getError());
+        Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
+        if (!clientFromRequest.isPresent()) {
+            return Optional.empty();
         }
 
         User user = userRepository.findByLogin(credentials.get().getLogin());
         if (user == null) {
-            return new UserAndClientFromRequest(ResponseEntity.notFound().build());
+            errors.add("User not found");
+            return Optional.empty();
         }
         if (validatePassword) {
             if (!passwordEncoder.matches(credentials.get().getPassword(), user.getPassword())) {
-                return new UserAndClientFromRequest(getBadRequestResponseEntity("Login and password do not match"));
+                errors.add("Login and password do not match");
+                return Optional.empty();
             }
         }
 
-        return new UserAndClientFromRequest(user, clientFromRequest.getClientDetails());
+        return Optional.of(new UserAndClientFromRequest(user, clientFromRequest.get()));
     }
 
-    private ClientFromRequest getClientFromRequest(Map<String, String> body) {
+    private Optional<ClientDetails> getClientFromRequest(Map<String, String> body, List<String> errors) {
         final String clientId = body.get("clientId");
         final String clientSecret = body.get("clientSecret");
 
         if (emptyClientDetails(clientId, clientSecret)) {
-            return new ClientFromRequest(getBadRequestResponseEntity("Provide client details"));
+            errors.add("Empty client credentials");
+            return Optional.empty();
         }
 
         ClientDetails client = clientRepository.findByClientId(clientId);
         if (client == null) {
-            return new ClientFromRequest(getBadRequestResponseEntity("Unknown client"));
+            errors.add("Client not found");
+            return Optional.empty();
         }
         if (!passwordEncoder.matches(clientSecret, client.getClientSecret())) {
-            return new ClientFromRequest(getBadRequestResponseEntity("Bad client details"));
+            errors.add("Bad client credentials");
+            return Optional.empty();
         }
 
-        return new ClientFromRequest(client);
+        return Optional.of(client);
     }
 
     private boolean emptyClientDetails(String clientId, String clientSecret) {
         return Strings.isNullOrEmpty(clientId) || Strings.isNullOrEmpty(clientSecret);
     }
 
-    private ResponseEntity<LoginResult> getBadRequestResponseEntity(String errorMessage) {
+    private ResponseEntity<LoginResult> getErrorRequest(List<String> errorMessage) {
         final LoginResult loginResult = new LoginResult();
-        loginResult.setErrorMessage(errorMessage);
+        loginResult.setErrorMessage(errorMessage.size() == 1 ? errorMessage.get(0) : "Operation failed");
         return ResponseEntity.badRequest().body(loginResult);
     }
 
-    @Data
-    private static class ClientFromRequest {
-        private ClientDetails clientDetails;
-        private ResponseEntity<LoginResult> error;
-
-        ClientFromRequest(ClientDetails clientDetails) {
-            this.clientDetails = clientDetails;
-        }
-
-        ClientFromRequest(ResponseEntity<LoginResult> error) {
-            this.error = error;
-        }
-    }
-
-    @Data
+    @Value
     private static class UserAndClientFromRequest {
         private User user;
         private ClientDetails clientDetails;
-        private ResponseEntity<LoginResult> error;
-
-        UserAndClientFromRequest(ResponseEntity<LoginResult> error) {
-            this.error = error;
-        }
-
-        UserAndClientFromRequest(User user, ClientDetails clientDetails) {
-            this.user = user;
-            this.clientDetails = clientDetails;
-        }
     }
 }
