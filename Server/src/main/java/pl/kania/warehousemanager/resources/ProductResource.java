@@ -1,5 +1,6 @@
 package pl.kania.warehousemanager.resources;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -9,10 +10,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 import pl.kania.warehousemanager.dao.ProductRepository;
-import pl.kania.warehousemanager.model.Product;
+import pl.kania.warehousemanager.model.WarehouseRole;
+import pl.kania.warehousemanager.model.db.Product;
+import pl.kania.warehousemanager.security.JWTService;
 
 import javax.ws.rs.QueryParam;
 import java.net.URI;
@@ -22,15 +26,24 @@ import java.util.Optional;
 public class ProductResource {
 
     @Autowired
+    private JWTService jwtService;
+
+    @Autowired
     private ProductRepository productDao;
 
     @GetMapping("/products")
-    public ResponseEntity<Iterable<Product>> getAllProducts() {
+    public ResponseEntity<Iterable<Product>> getAllProducts(@RequestHeader("Authorization") String header) {
+        if (userDoesNotHavePermission(WarehouseRole.EMPLOYEE, header)) {
+            return getResponseUnauthorized();
+        }
         return ResponseEntity.ok(productDao.findAll());
     }
 
     @GetMapping("/product/{productId}")
-    public ResponseEntity<Product> getProduct(@PathVariable("productId") Long productId) {
+    public ResponseEntity<Product> getProduct(@PathVariable("productId") Long productId, @RequestHeader("Authorization") String header) {
+        if (userDoesNotHavePermission(WarehouseRole.EMPLOYEE, header)) {
+            return getResponseUnauthorized();
+        }
         Optional<Product> product = productDao.findById(productId);
         if (!product.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -39,7 +52,10 @@ public class ProductResource {
     }
 
     @PostMapping("/product")
-    public ResponseEntity<Void> addProduct(@RequestBody Product product) {
+    public ResponseEntity<Void> addProduct(@RequestBody Product product, @RequestHeader("Authorization") String header) {
+        if (userDoesNotHavePermission(WarehouseRole.EMPLOYEE, header)) {
+            return getResponseUnauthorized();
+        }
         if (product == null) {
             return getResponseEntityNullParameter();
         }
@@ -51,7 +67,10 @@ public class ProductResource {
     }
 
     @PutMapping("/product/{productId}/update")
-    public ResponseEntity<Void> updateProduct(@RequestBody Product product, @PathVariable("productId") Long productId) {
+    public ResponseEntity<Void> updateProduct(@RequestBody Product product, @PathVariable("productId") Long productId, @RequestHeader("Authorization") String header) {
+        if (userDoesNotHavePermission(WarehouseRole.EMPLOYEE, header)) {
+            return getResponseUnauthorized();
+        }
         Optional<Product> productOpt = productDao.findById(productId);
         if (!productOpt.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -63,7 +82,10 @@ public class ProductResource {
     }
 
     @DeleteMapping("/product/{productId}/deletion")
-    public ResponseEntity<Void> deleteProduct(@PathVariable("productId") Long productId) {
+    public ResponseEntity<Void> deleteProduct(@PathVariable("productId") Long productId, @RequestHeader("Authorization") String header) {
+        if (userDoesNotHavePermission(WarehouseRole.MANAGER, header)) {
+            return getResponseUnauthorized();
+        }
         if (productId == null) {
             return getResponseEntityNullParameter();
         }
@@ -73,7 +95,10 @@ public class ProductResource {
     }
 
     @PatchMapping("/product/{productId}/increase")
-    public ResponseEntity<Void> increaseProductQuantityBy(@RequestBody Integer quantity, @PathVariable("productId") Long productId) {
+    public ResponseEntity<Void> increaseProductQuantityBy(@RequestBody Integer quantity, @PathVariable("productId") Long productId, @RequestHeader("Authorization") String header) {
+        if (userDoesNotHavePermission(WarehouseRole.EMPLOYEE, header)) {
+            return getResponseUnauthorized();
+        }
         if (quantity == null || productId == null) {
             return getResponseEntityNullParameter();
         }
@@ -88,7 +113,10 @@ public class ProductResource {
     }
 
     @PatchMapping("/product/{productId}/decrease")
-    public ResponseEntity<Void> decreaseProductQuantityBy(@RequestBody Integer quantity, @PathVariable("productId") Long productId) {
+    public ResponseEntity<Void> decreaseProductQuantityBy(@RequestBody Integer quantity, @PathVariable("productId") Long productId, @RequestHeader("Authorization") String header) {
+        if (userDoesNotHavePermission(WarehouseRole.EMPLOYEE, header)) {
+            return getResponseUnauthorized();
+        }
         if (quantity == null || productId == null) {
             return getResponseEntityNullParameter();
         }
@@ -100,6 +128,15 @@ public class ProductResource {
             return ResponseEntity.unprocessableEntity().build();
         }
         return ResponseEntity.ok().build();
+    }
+
+    @NotNull
+    private <T> ResponseEntity<T> getResponseUnauthorized() {
+        return ResponseEntity.status(401).build();
+    }
+
+    private boolean userDoesNotHavePermission(WarehouseRole role, @RequestHeader("Authorization") String header) {
+        return !jwtService.hasRole(role, header);
     }
 
     private boolean productNotExists(@QueryParam("productId") Long productId) {

@@ -1,21 +1,26 @@
 package pl.kania.warehousemanager.resources;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.kania.warehousemanager.Strings;
+import pl.kania.warehousemanager.beans.HeaderExtractor;
 import pl.kania.warehousemanager.dao.ClientDetailsRepository;
 import pl.kania.warehousemanager.dao.UserRepository;
-import pl.kania.warehousemanager.model.OauthClientDetails;
-import pl.kania.warehousemanager.model.User;
-import pl.kania.warehousemanager.model.WarehouseRole;
+import pl.kania.warehousemanager.model.UserCredentials;
+import pl.kania.warehousemanager.model.db.ClientDetails;
+import pl.kania.warehousemanager.model.db.User;
+import pl.kania.warehousemanager.model.dto.LoginResult;
 import pl.kania.warehousemanager.security.JWTService;
 
-import javax.annotation.PostConstruct;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 public class MyAuthorizationResource {
@@ -27,65 +32,96 @@ public class MyAuthorizationResource {
     private ClientDetailsRepository clientRepository;
 
     @Autowired
+    private JWTService jwtService;
+
+    @Autowired
+    private HeaderExtractor credentialExtractor;
+
+    @Autowired
     private UserRepository userRepository;
-    private BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
 
-    @PostConstruct
-    private void fillDatabase() {
-        // TODO szyfrowanie hasla
-        User user = new User(null, "user", "user", WarehouseRole.EMPLOYEE);
-        userRepository.save(user);
-        User manager = new User(null, "admin", "admin", WarehouseRole.MANAGER);
-        userRepository.save(manager);
-        OauthClientDetails oauthClientToken = new OauthClientDetails();
-        oauthClientToken.setClientId("androidapp");
-        oauthClientToken.setClientSecret("password");
-        oauthClientToken.setScope("read");
-        oauthClientToken.setAuthorizedGrantTypes("password,authorization_code");
-        oauthClientToken.setWebServerRedirectUri("https://www.getpostman.com/oauth2/callback");
-        oauthClientToken.setAuthorities("USER");
-        oauthClientToken.setAccessTokenValidity(10800);
-        oauthClientToken.setRefreshTokenValidity(2592000);
-        clientRepository.save(oauthClientToken);
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    @PostMapping(value = "/login")
+    public ResponseEntity<LoginResult> logIn(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
+        UserFromClient userFromClient = getUserFromClient(authorization, body, true);
+        if (userFromClient.error != null) {
+            return userFromClient.getError();
+        }
+
+        String token = createToken(userFromClient);
+        return ResponseEntity.ok(new LoginResult(token, userFromClient.getUser().getLogin()));
     }
 
+    private String createToken(UserFromClient userFromClient) {
+        return jwtService.createJwt(userFromClient.getUser(), userFromClient.getClientDetails(),
+                environment.getProperty("server.issuer"), environment.getProperty("server.audience"));
+    }
 
-    @PostMapping("/login")
-    public ResponseEntity<String> logIn(@RequestParam("username") String username, @RequestParam("password") String password,
-                                             @RequestParam("client_id") String clientId, @RequestParam("client_secret") String clientSecret) {
-        if (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password)) {
-            return ResponseEntity.badRequest().body("Provide credentials");
+    @PostMapping(value = "/login-with-google")
+    public ResponseEntity<LoginResult> logInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
+        UserFromClient userFromClient = getUserFromClient(authorization, body, false);
+
+        String token = createToken(userFromClient);
+        return ResponseEntity.ok(new LoginResult(token, userFromClient.getUser().getLogin()));
+    }
+
+    private UserFromClient getUserFromClient(String authorization, Map<String, String> body, boolean validatePassword) {
+        final Optional<UserCredentials> credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization);
+        if (!credentials.isPresent()) {
+            return new UserFromClient(getBadRequestResponseEntity("Provide credentials in proper format"));
         }
-        if (Strings.isNullOrEmpty(clientId) || Strings.isNullOrEmpty(clientSecret)) {
-            return ResponseEntity.badRequest().body("Provide client details");
+        final String clientId = body.get("clientId");
+        final String clientSecret = body.get("clientSecret");
+
+        if (emptyClientDetails(clientId, clientSecret)) {
+            return new UserFromClient(getBadRequestResponseEntity("Provide client details"));
         }
 
-        OauthClientDetails client = clientRepository.findByClientId(clientId);
+        ClientDetails client = clientRepository.findByClientId(clientId);
         if (client == null) {
-            return ResponseEntity.badRequest().body("Unknown client");
+            return new UserFromClient(getBadRequestResponseEntity("Unknown client"));
         }
-        if (!client.getClientSecret().equals(clientSecret)) { // TODO szyfryl
-
-
-            return ResponseEntity.badRequest().body("Bad client details");
+        if (!passwordEncoder.matches(clientSecret, client.getClientSecret())) {
+            return new UserFromClient(getBadRequestResponseEntity("Bad client details"));
         }
 
-        User user = userRepository.findByLogin(username);
+        User user = userRepository.findByLogin(credentials.get().getLogin());
         if (user == null) {
-            return ResponseEntity.notFound().build();
+            return new UserFromClient(ResponseEntity.notFound().build());
+        }
+        if (validatePassword) {
+            if (!passwordEncoder.matches(credentials.get().getPassword(),user.getPassword())) {
+                return new UserFromClient(getBadRequestResponseEntity("Login and password do not match"));
+            }
         }
 
-        if (!user.getPassword().equals(password)) { // TODO szyfry
-            return ResponseEntity.badRequest().build();
-        }
-        String token = JWTService.createJwt(user, client, environment.getProperty("server.issuer"), environment.getProperty("server.audience"));
-        // TODO utwórz token i zwróć
-
-        return ResponseEntity.ok(token);
+        return new UserFromClient(user, client);
     }
 
-    @PostMapping("/oauth/authorization")
-    public ResponseEntity<String> s() {
-        return null;
+    private boolean emptyClientDetails(String clientId, String clientSecret) {
+        return Strings.isNullOrEmpty(clientId) || Strings.isNullOrEmpty(clientSecret);
+    }
+
+    private ResponseEntity<LoginResult> getBadRequestResponseEntity(String errorMessage) {
+        final LoginResult loginResult = new LoginResult();
+        loginResult.setErrorMessage(errorMessage);
+        return ResponseEntity.badRequest().body(loginResult);
+    }
+
+    @Data
+    private class UserFromClient {
+        private User user;
+        private ClientDetails clientDetails;
+        private ResponseEntity<LoginResult> error;
+
+        UserFromClient(ResponseEntity<LoginResult> error) {
+            this.error = error;
+        }
+
+        UserFromClient(User user,ClientDetails clientDetails) {
+            this.user = user;
+            this.clientDetails = clientDetails;
+        }
     }
 }

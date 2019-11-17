@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.model;
+package pl.kania.warehousemanager.model.db;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +15,7 @@ import java.util.Date;
 @Setter
 @Entity
 @Table(name="oauth_client_details")
-public class OauthClientDetails {
+public class ClientDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

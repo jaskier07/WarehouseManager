@@ -1,8 +1,9 @@
-package pl.kania.warehousemanager.model;
+package pl.kania.warehousemanager.model.db;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import pl.kania.warehousemanager.model.WarehouseRole;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
