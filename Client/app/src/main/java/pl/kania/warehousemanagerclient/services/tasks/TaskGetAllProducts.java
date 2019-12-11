@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.util.Log;
 
@@ -9,9 +9,9 @@ import java.util.function.Consumer;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import pl.kania.warehousemanagerclient.model.Product;
+import pl.kania.warehousemanagerclient.model.entities.Product;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
+import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
 
 
 class TaskGetAllProducts extends AbstractRestTask<Void, List<Product>> {

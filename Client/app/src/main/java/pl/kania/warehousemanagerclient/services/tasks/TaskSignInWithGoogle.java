@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.util.Log;
 
@@ -7,10 +7,10 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import pl.kania.warehousemanagerclient.model.GoogleCredentials;
-import pl.kania.warehousemanagerclient.model.LoginResult;
+import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
+import pl.kania.warehousemanagerclient.model.login.LoginResult;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
+import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
 
 class TaskSignInWithGoogle extends AbstractRestTask<GoogleCredentials, LoginResult>{
 

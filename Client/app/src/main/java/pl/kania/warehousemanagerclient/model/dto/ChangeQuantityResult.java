@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.model;
+package pl.kania.warehousemanagerclient.model.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

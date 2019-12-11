@@ -28,11 +28,11 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.model.GoogleCredentials;
-import pl.kania.warehousemanagerclient.model.LoggingMethod;
-import pl.kania.warehousemanagerclient.model.LoginResult;
-import pl.kania.warehousemanagerclient.model.UserCredentials;
-import pl.kania.warehousemanagerclient.tasks.RestService;
+import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
+import pl.kania.warehousemanagerclient.model.login.LoggingMethod;
+import pl.kania.warehousemanagerclient.model.login.LoginResult;
+import pl.kania.warehousemanagerclient.model.login.UserCredentials;
+import pl.kania.warehousemanagerclient.services.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
 public class LogInFragment extends Fragment {

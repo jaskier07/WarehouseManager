@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.content.SharedPreferences;
 
@@ -6,17 +6,17 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
-import pl.kania.warehousemanagerclient.model.GoogleCredentials;
-import pl.kania.warehousemanagerclient.model.LoginResult;
-import pl.kania.warehousemanagerclient.model.Product;
-import pl.kania.warehousemanagerclient.model.ProductQuantity;
-import pl.kania.warehousemanagerclient.model.UserCredentials;
+import pl.kania.warehousemanagerclient.model.dto.ProductQuantity;
+import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
+import pl.kania.warehousemanagerclient.model.login.LoginResult;
+import pl.kania.warehousemanagerclient.model.login.UserCredentials;
 
 import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_TOKEN;
 
 public class RestService {
 
-    static final String BASE_URI = "http://c13cf18d.ngrok.io";
+    static final String BASE_URI = "http://daf333f0.ngrok.io";
     static final String BASE_URI_PRODUCT = BASE_URI + "/product";
     public static final String BASE_URI_LOGIN = BASE_URI + "/login";
     private SharedPreferences sharedPreferences;

@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.util.Log;
 
@@ -7,13 +7,12 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import pl.kania.warehousemanagerclient.model.LoginResult;
-import pl.kania.warehousemanagerclient.model.UserCredentials;
+import pl.kania.warehousemanagerclient.model.login.LoginResult;
+import pl.kania.warehousemanagerclient.model.login.UserCredentials;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
+import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
 
-public class TaskLogIn extends AbstractRestTask<UserCredentials, LoginResult> {
-
+class TaskSignIn extends AbstractRestTask<UserCredentials, LoginResult>{
 
     @Override
     protected LoginResult doInBackground(UserCredentials... credentials) {
@@ -24,14 +23,14 @@ public class TaskLogIn extends AbstractRestTask<UserCredentials, LoginResult> {
             if (response.isSuccessful() ) {
                 return loginResult;
             } else {
-                Log.w("login", "Unsuccessful login");
+                Log.w("sign in", "Unsuccessful sign in");
                 return loginResult;
             }
         } catch (Exception e) {
-            Log.e("login", "An error occured while trying to log user", e);
+            Log.e("sign in", "An error occured while trying to sign in user", e);
         }
         LoginResult loginResult = new LoginResult();
-        loginResult.setErrorMessage("An error occured while trying to log user");
+        loginResult.setErrorMessage("An error occured while trying to sign in user");
         return loginResult;
     }
 
@@ -43,7 +42,7 @@ public class TaskLogIn extends AbstractRestTask<UserCredentials, LoginResult> {
         return new Request.Builder()
                 .addHeader("Authorization", "Basic " + credentials.getEncoded())
                 .post(requestBody)
-                .url(BASE_URI + "/log-in")
+                .url(BASE_URI + "/sign-in")
                 .build();
     }
 }

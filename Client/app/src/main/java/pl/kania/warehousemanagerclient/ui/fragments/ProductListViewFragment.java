@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment;
 
 import lombok.Getter;
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.tasks.RestService;
+import pl.kania.warehousemanagerclient.services.tasks.RestService;
 import pl.kania.warehousemanagerclient.ui.ProductAdapter;
 
 import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;

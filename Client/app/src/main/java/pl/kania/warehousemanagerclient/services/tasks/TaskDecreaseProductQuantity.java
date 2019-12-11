@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.util.Log;
 
@@ -9,10 +9,10 @@ import java.util.function.Consumer;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import pl.kania.warehousemanagerclient.model.ChangeQuantityResult;
-import pl.kania.warehousemanagerclient.model.ProductQuantity;
+import pl.kania.warehousemanagerclient.model.dto.ChangeQuantityResult;
+import pl.kania.warehousemanagerclient.model.dto.ProductQuantity;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
+import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI_PRODUCT;
 
 class TaskDecreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void> {
 

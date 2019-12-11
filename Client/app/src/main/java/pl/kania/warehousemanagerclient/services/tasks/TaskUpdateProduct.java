@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.util.Log;
 
@@ -7,9 +7,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import pl.kania.warehousemanagerclient.model.Product;
+import pl.kania.warehousemanagerclient.model.entities.Product;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
+import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI_PRODUCT;
 
 class TaskUpdateProduct extends AbstractRestTask<Product, Void> {
 

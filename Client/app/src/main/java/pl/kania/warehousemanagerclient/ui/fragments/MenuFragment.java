@@ -17,7 +17,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.model.LoggingMethod;
+import pl.kania.warehousemanagerclient.model.login.LoggingMethod;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
 import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_LOGGING_METHOD;

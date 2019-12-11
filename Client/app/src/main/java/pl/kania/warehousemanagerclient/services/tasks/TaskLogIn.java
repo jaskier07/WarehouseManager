@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.util.Log;
 
@@ -7,15 +7,16 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import pl.kania.warehousemanagerclient.model.GoogleCredentials;
-import pl.kania.warehousemanagerclient.model.LoginResult;
+import pl.kania.warehousemanagerclient.model.login.LoginResult;
+import pl.kania.warehousemanagerclient.model.login.UserCredentials;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
+import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
 
-class TaskLogInWithGoogle extends AbstractRestTask<GoogleCredentials, LoginResult> {
+public class TaskLogIn extends AbstractRestTask<UserCredentials, LoginResult> {
+
 
     @Override
-    protected LoginResult doInBackground(GoogleCredentials... credentials) {
+    protected LoginResult doInBackground(UserCredentials... credentials) {
         try {
             final Response response = executeRequest(getRequest(credentials[0]));
             final ResponseBody responseBody = response.body();
@@ -23,26 +24,26 @@ class TaskLogInWithGoogle extends AbstractRestTask<GoogleCredentials, LoginResul
             if (response.isSuccessful() ) {
                 return loginResult;
             } else {
-                Log.w("login google", "Unsuccessful login with google");
+                Log.w("login", "Unsuccessful login");
                 return loginResult;
             }
         } catch (Exception e) {
-            Log.e("login google", "An error occured while trying to log user with google", e);
+            Log.e("login", "An error occured while trying to log user", e);
         }
         LoginResult loginResult = new LoginResult();
-        loginResult.setErrorMessage("An error occured while trying to log user with Google");
+        loginResult.setErrorMessage("An error occured while trying to log user");
         return loginResult;
     }
 
-    private Request getRequest(GoogleCredentials credentials) {
+    private Request getRequest(UserCredentials credentials) {
         final RequestBody requestBody = new FormBody.Builder()
                 .add("clientId", credentials.getClientId())
                 .add("clientSecret", credentials.getClientSecret())
                 .build();
         return new Request.Builder()
-                .addHeader("Authorization", "access " + credentials.getToken())
+                .addHeader("Authorization", "Basic " + credentials.getEncoded())
                 .post(requestBody)
-                .url(BASE_URI + "/log-in-with-google")
+                .url(BASE_URI + "/log-in")
                 .build();
     }
 }

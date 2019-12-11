@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.model;
+package pl.kania.warehousemanagerclient.model.login;
 
 public enum  LoggingMethod {
     NOT_LOGGED,

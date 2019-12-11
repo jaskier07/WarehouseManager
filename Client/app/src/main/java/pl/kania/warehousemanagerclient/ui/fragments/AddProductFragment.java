@@ -15,8 +15,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.model.Product;
-import pl.kania.warehousemanagerclient.tasks.RestService;
+import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.services.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 

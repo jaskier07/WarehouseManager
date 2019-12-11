@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.model.Product;
-import pl.kania.warehousemanagerclient.model.ProductQuantity;
-import pl.kania.warehousemanagerclient.tasks.RestService;
+import pl.kania.warehousemanagerclient.model.dto.ProductQuantity;
+import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.services.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
 import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;

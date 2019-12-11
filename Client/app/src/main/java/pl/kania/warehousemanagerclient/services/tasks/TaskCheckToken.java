@@ -1,11 +1,11 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.util.Log;
 
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI;
+import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
 
 public class TaskCheckToken extends AbstractRestTask<String, Boolean> {
 

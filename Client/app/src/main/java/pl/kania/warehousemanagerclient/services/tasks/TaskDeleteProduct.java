@@ -1,4 +1,4 @@
-package pl.kania.warehousemanagerclient.tasks;
+package pl.kania.warehousemanagerclient.services.tasks;
 
 import android.util.Log;
 
@@ -6,7 +6,7 @@ import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static pl.kania.warehousemanagerclient.tasks.RestService.BASE_URI_PRODUCT;
+import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI_PRODUCT;
 
 class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
 
