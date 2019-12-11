@@ -13,7 +13,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import pl.kania.warehousemanagerclient.services.BaseUriProvider;
+import pl.kania.warehousemanagerclient.services.ConfigurationProvider;
 
 @Getter(value = AccessLevel.PROTECTED)
 public abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
@@ -24,15 +24,15 @@ public abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
             .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String token;
-    private BaseUriProvider baseUriProvider;
+    private ConfigurationProvider configurationProvider;
 
     AbstractRestTask(String token, Context context) {
         this.token = token;
-        this.baseUriProvider = new BaseUriProvider(context);
+        this.configurationProvider = new ConfigurationProvider(context);
     }
 
     AbstractRestTask(Context context) {
-        this.baseUriProvider = new BaseUriProvider(context);
+        this.configurationProvider = new ConfigurationProvider(context);
     }
 
     protected MediaType getMediaType() {
@@ -48,10 +48,10 @@ public abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
     }
 
     protected String getBaseProductUri() {
-        return baseUriProvider.getBASE_URI_PRODUCT();
+        return configurationProvider.getBaseProductUri();
     }
 
     protected String getBaseUri() {
-        return baseUriProvider.getBASE_URI();
+        return configurationProvider.getBaseUri();
     }
 }

@@ -30,6 +30,7 @@ import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
 import pl.kania.warehousemanagerclient.model.login.LoggingMethod;
 import pl.kania.warehousemanagerclient.model.login.LoginResult;
 import pl.kania.warehousemanagerclient.model.login.UserCredentials;
+import pl.kania.warehousemanagerclient.services.ConfigurationProvider;
 import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.services.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
@@ -47,11 +48,9 @@ public class LogInFragment extends AbstractFragment {
     private EditText loginEditTextSignIn;
     private EditText passwordEditTextSignIn;
     private TextView info;
-    private String clientId;
-    private String clientSecret;
-    private String googleClientId;
     private GoogleSignInClient googleClientSignIn;
     private RestService restService;
+    private ConfigurationProvider configurationProvider;
 
     public LogInFragment(SharedPreferences sharedPreferences, DatabaseManager db) {
         super(sharedPreferences, db);
@@ -71,13 +70,10 @@ public class LogInFragment extends AbstractFragment {
         loginEditTextSignIn = view.findViewById(R.id.loginValueSignIn);
         passwordEditTextSignIn = view.findViewById(R.id.passwordValueSignIn);
 
-        clientId = getContext().getString(R.string.client_id);
-        clientSecret = getContext().getString(R.string.client_secret);
-        googleClientId = getContext().getString(R.string.google_client_id);
         final String token = getSharedPreferences().getString(SHARED_PREFERENCES_TOKEN, null);
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestIdToken(googleClientId)
+                .requestIdToken(configurationProvider.getClientId())
                 .build();
         googleClientSignIn = GoogleSignIn.getClient(getContext(), gso);
 
@@ -148,7 +144,7 @@ public class LogInFragment extends AbstractFragment {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
         if (account != null && account.getIdToken() != null) {
             try {
-                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
+                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), configurationProvider.getClientId(), configurationProvider.getClientSecret());
                 final LoginResult loginResult = restService.logInWithGoogle(googleCredentials);
                 handleLoginResult(loginResult, LoggingMethod.GOOGLE);
             } catch (InterruptedException | ExecutionException e) {
@@ -194,7 +190,7 @@ public class LogInFragment extends AbstractFragment {
         try {
             final GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null && account.getIdToken() != null) {
-                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
+                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), configurationProvider.getClientId(), configurationProvider.getClientSecret());
                 final LoginResult loginResult = restService.logInWithGoogle(googleCredentials);
                 handleLoginResult(loginResult, LoggingMethod.GOOGLE);
             } else {
@@ -213,7 +209,7 @@ public class LogInFragment extends AbstractFragment {
         try {
             final GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null && account.getIdToken() != null) {
-                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
+                final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), configurationProvider.getClientId(), configurationProvider.getClientSecret());
                 final LoginResult loginResult = restService.signInWithGoogle(googleCredentials);
                 handleLoginResult(loginResult, LoggingMethod.GOOGLE);
             } else {
@@ -240,7 +236,7 @@ public class LogInFragment extends AbstractFragment {
             return Optional.empty();
         }
 
-        return Optional.of(new UserCredentials(login.getText().toString(), password.getText().toString(), clientId, clientSecret));
+        return Optional.of(new UserCredentials(login.getText().toString(), password.getText().toString(), configurationProvider.getClientId(), configurationProvider.getClientSecret()));
     }
 
 }
