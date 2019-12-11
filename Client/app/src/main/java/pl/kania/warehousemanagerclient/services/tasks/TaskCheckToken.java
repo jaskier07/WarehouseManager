@@ -1,14 +1,18 @@
 package pl.kania.warehousemanagerclient.services.tasks;
 
+import android.content.Context;
 import android.util.Log;
 
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
+
 
 public class TaskCheckToken extends AbstractRestTask<String, Boolean> {
 
+    public TaskCheckToken(Context context) {
+        super(context);
+    }
 
     @Override
     protected Boolean doInBackground(String... tokens) {
@@ -27,7 +31,7 @@ public class TaskCheckToken extends AbstractRestTask<String, Boolean> {
         return new Request.Builder()
                 .get()
                 .addHeader(AUTH_HEADER, "bearer " + token)
-                .url(BASE_URI + "/check-token")
+                .url(getBaseProductUri() + "/check-token")
                 .build();
     }
 }

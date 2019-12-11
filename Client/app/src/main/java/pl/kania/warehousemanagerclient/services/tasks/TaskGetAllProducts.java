@@ -1,5 +1,6 @@
 package pl.kania.warehousemanagerclient.services.tasks;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -11,14 +12,13 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import pl.kania.warehousemanagerclient.model.entities.Product;
 
-import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
 
 
 class TaskGetAllProducts extends AbstractRestTask<Void, List<Product>> {
     private final Consumer<List<Product>> updateProducts;
 
-    TaskGetAllProducts(String token, Consumer<List<Product>> updateProducts) {
-        super(token);
+    TaskGetAllProducts(String token, Consumer<List<Product>> updateProducts, Context context) {
+        super(token, context);
         this.updateProducts = updateProducts;
     }
 
@@ -41,7 +41,7 @@ class TaskGetAllProducts extends AbstractRestTask<Void, List<Product>> {
 
     private Request getRequest() {
         return new Request.Builder()
-                .url(BASE_URI + "/products")
+                .url(getBaseProductUri() + "/products")
                 .addHeader(AUTH_HEADER, getAuthValue())
                 .build();
     }

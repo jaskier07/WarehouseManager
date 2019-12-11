@@ -1,5 +1,6 @@
 package pl.kania.warehousemanagerclient.services.tasks;
 
+import android.content.Context;
 import android.util.Log;
 
 import okhttp3.FormBody;
@@ -10,9 +11,13 @@ import okhttp3.ResponseBody;
 import pl.kania.warehousemanagerclient.model.login.LoginResult;
 import pl.kania.warehousemanagerclient.model.login.UserCredentials;
 
-import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
+
 
 class TaskSignIn extends AbstractRestTask<UserCredentials, LoginResult>{
+
+    TaskSignIn(Context context) {
+        super(context);
+    }
 
     @Override
     protected LoginResult doInBackground(UserCredentials... credentials) {
@@ -42,7 +47,7 @@ class TaskSignIn extends AbstractRestTask<UserCredentials, LoginResult>{
         return new Request.Builder()
                 .addHeader("Authorization", "Basic " + credentials.getEncoded())
                 .post(requestBody)
-                .url(BASE_URI + "/sign-in")
+                .url(getBaseUri() + "/sign-in")
                 .build();
     }
 }

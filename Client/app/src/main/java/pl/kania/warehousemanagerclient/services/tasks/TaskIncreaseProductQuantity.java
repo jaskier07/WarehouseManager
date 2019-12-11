@@ -1,5 +1,6 @@
 package pl.kania.warehousemanagerclient.services.tasks;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,14 +11,14 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import pl.kania.warehousemanagerclient.model.dto.ProductQuantity;
 
-import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI_PRODUCT;
+
 
 class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void> {
 
     private final Runnable afterIncrease;
 
-    TaskIncreaseProductQuantity(String token, Runnable afterIncrease) {
-        super(token);
+    TaskIncreaseProductQuantity(String token, Runnable afterIncrease, Context context) {
+        super(token, context);
         this.afterIncrease = afterIncrease;
     }
 
@@ -44,7 +45,7 @@ class TaskIncreaseProductQuantity extends AbstractRestTask<ProductQuantity, Void
         final RequestBody responseBody = RequestBody.create(getMediaType(), getObjectMapper().writeValueAsString(productQuantity.getQuantity()));
         return new Request.Builder()
                 .addHeader(AUTH_HEADER, getAuthValue())
-                .url(BASE_URI_PRODUCT + "/" + productQuantity.getProductId() + "/increase")
+                .url(getBaseProductUri() + "/" + productQuantity.getProductId() + "/increase")
                 .patch(responseBody)
                 .build();
     }

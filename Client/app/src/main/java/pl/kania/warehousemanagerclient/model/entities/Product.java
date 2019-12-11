@@ -16,19 +16,16 @@ import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntr
 import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.QUANTITY;
 
 @Builder
+@Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Product {
 
     private Long id;
-    @Setter
     private String manufacturerName;
-    @Setter
     private String modelName;
-    @Setter
     private Double price;
-
     private Integer quantity;
 
     public static class ProductEntry implements BaseColumns {

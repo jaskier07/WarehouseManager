@@ -1,6 +1,5 @@
 package pl.kania.warehousemanagerclient.ui.fragments;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -32,10 +30,11 @@ import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
 import pl.kania.warehousemanagerclient.model.login.LoggingMethod;
 import pl.kania.warehousemanagerclient.model.login.LoginResult;
 import pl.kania.warehousemanagerclient.model.login.UserCredentials;
+import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.services.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
-public class LogInFragment extends Fragment {
+public class LogInFragment extends AbstractFragment {
 
     public static final String SHARED_PREFERENCES_NAME = "com.kania.warehousemanager.client";
     public static final String SHARED_PREFERENCES_TOKEN = SHARED_PREFERENCES_NAME + "token";
@@ -43,7 +42,6 @@ public class LogInFragment extends Fragment {
     static final String SHARED_PREFERENCES_LOGGING_METHOD = SHARED_PREFERENCES_NAME + "loggingMethod";
     private static final int R_LOG_IN = 1;
     private static final int R_SIGN_IN = 2;
-    private SharedPreferences sharedPreferences;
     private EditText loginEditText;
     private EditText passwordEditText;
     private EditText loginEditTextSignIn;
@@ -53,6 +51,12 @@ public class LogInFragment extends Fragment {
     private String clientSecret;
     private String googleClientId;
     private GoogleSignInClient googleClientSignIn;
+    private RestService restService;
+
+    public LogInFragment(SharedPreferences sharedPreferences, DatabaseManager db) {
+        super(sharedPreferences, db);
+        this.restService = new RestService(sharedPreferences, getContext());
+    }
 
     @Nullable
     @Override
@@ -67,11 +71,10 @@ public class LogInFragment extends Fragment {
         loginEditTextSignIn = view.findViewById(R.id.loginValueSignIn);
         passwordEditTextSignIn = view.findViewById(R.id.passwordValueSignIn);
 
-        sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
         clientId = getContext().getString(R.string.client_id);
         clientSecret = getContext().getString(R.string.client_secret);
         googleClientId = getContext().getString(R.string.google_client_id);
-        final String token = sharedPreferences.getString(SHARED_PREFERENCES_TOKEN, null);
+        final String token = getSharedPreferences().getString(SHARED_PREFERENCES_TOKEN, null);
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .requestIdToken(googleClientId)
@@ -80,7 +83,7 @@ public class LogInFragment extends Fragment {
 
         if (token != null) {
             try {
-                if (new RestService(sharedPreferences).checkToken(token)) {
+                if (new RestService(getSharedPreferences(), getContext()).checkToken(token)) {
                     handleLoggedUser();
                     return view;
                 }
@@ -97,7 +100,7 @@ public class LogInFragment extends Fragment {
 
     private void handleLoggedUser() {
         info.setText("User is loggged.");
-        FragmentLoader.load(new MenuFragment(googleClientSignIn), getFragmentManager(), sharedPreferences);
+        FragmentLoader.load(new MenuFragment(getSharedPreferences(), getDb(), googleClientSignIn), getFragmentManager());
     }
 
     private void handleNotLoggedUser(View view) {
@@ -123,7 +126,7 @@ public class LogInFragment extends Fragment {
 
     private void actionSignIn(UserCredentials userCredentials) {
         try {
-            LoginResult loginResult = new RestService(sharedPreferences).signIn(userCredentials);
+            LoginResult loginResult = restService.signIn(userCredentials);
             handleLoginResult(loginResult, LoggingMethod.DEFAULT);
         } catch (ExecutionException | InterruptedException e) {
             Log.e("actionSignIn", "An error occured while signing in user", e);
@@ -133,7 +136,7 @@ public class LogInFragment extends Fragment {
 
     private void actionLogIn(UserCredentials userCredentials) {
         try {
-            LoginResult loginResult = new RestService(sharedPreferences).exchangeCredentialsForToken(userCredentials);
+            LoginResult loginResult = restService.exchangeCredentialsForToken(userCredentials);
             handleLoginResult(loginResult, LoggingMethod.DEFAULT);
         } catch (ExecutionException | InterruptedException e) {
             Log.e("actionLogIn", "An error occured while exchanging user credentials for token", e);
@@ -146,7 +149,7 @@ public class LogInFragment extends Fragment {
         if (account != null && account.getIdToken() != null) {
             try {
                 final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
-                final LoginResult loginResult = new RestService(sharedPreferences).logInWithGoogle(googleCredentials);
+                final LoginResult loginResult = restService.logInWithGoogle(googleCredentials);
                 handleLoginResult(loginResult, LoggingMethod.GOOGLE);
             } catch (InterruptedException | ExecutionException e) {
                 Log.e("google loginEditText", "error", e);
@@ -160,8 +163,8 @@ public class LogInFragment extends Fragment {
 
     private void handleLoginResult(LoginResult loginResult, LoggingMethod loggingMethod) {
         if (loginResult.getErrorMessage() == null) {
-            sharedPreferences.edit().putString(SHARED_PREFERENCES_USER_LOGIN, loginResult.getLogin()).commit();
-            sharedPreferences.edit().putString(SHARED_PREFERENCES_LOGGING_METHOD, loggingMethod.toString()).apply();
+            getSharedPreferences().edit().putString(SHARED_PREFERENCES_USER_LOGIN, loginResult.getLogin()).commit();
+            getSharedPreferences().edit().putString(SHARED_PREFERENCES_LOGGING_METHOD, loggingMethod.toString()).apply();
             saveToken(loginResult.getToken());
             loginEditText.setText("");
             loginEditTextSignIn.setText("");
@@ -192,7 +195,7 @@ public class LogInFragment extends Fragment {
             final GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null && account.getIdToken() != null) {
                 final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
-                final LoginResult loginResult = new RestService(sharedPreferences).logInWithGoogle(googleCredentials);
+                final LoginResult loginResult = restService.logInWithGoogle(googleCredentials);
                 handleLoginResult(loginResult, LoggingMethod.GOOGLE);
             } else {
                 info.setText("Exchanging Google token for app token failed.");
@@ -211,7 +214,7 @@ public class LogInFragment extends Fragment {
             final GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null && account.getIdToken() != null) {
                 final GoogleCredentials googleCredentials = new GoogleCredentials(account.getIdToken(), clientId, clientSecret);
-                final LoginResult loginResult = new RestService(sharedPreferences).signInWithGoogle(googleCredentials);
+                final LoginResult loginResult = restService.signInWithGoogle(googleCredentials);
                 handleLoginResult(loginResult, LoggingMethod.GOOGLE);
             } else {
                 info.setText("Exchanging Google token for app token failed.");
@@ -226,7 +229,7 @@ public class LogInFragment extends Fragment {
     }
 
     private void saveToken(String token) {
-        if (!sharedPreferences.edit().putString(SHARED_PREFERENCES_TOKEN, token).commit()) {
+        if (!getSharedPreferences().edit().putString(SHARED_PREFERENCES_TOKEN, token).commit()) {
             info.setText("Saving token to preferences failed.");
         }
     }

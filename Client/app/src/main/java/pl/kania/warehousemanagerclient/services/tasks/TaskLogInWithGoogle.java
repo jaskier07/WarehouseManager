@@ -1,5 +1,6 @@
 package pl.kania.warehousemanagerclient.services.tasks;
 
+import android.content.Context;
 import android.util.Log;
 
 import okhttp3.FormBody;
@@ -10,9 +11,13 @@ import okhttp3.ResponseBody;
 import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
 import pl.kania.warehousemanagerclient.model.login.LoginResult;
 
-import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI;
+
 
 class TaskLogInWithGoogle extends AbstractRestTask<GoogleCredentials, LoginResult> {
+
+    public TaskLogInWithGoogle(Context context) {
+        super(context);
+    }
 
     @Override
     protected LoginResult doInBackground(GoogleCredentials... credentials) {
@@ -42,7 +47,7 @@ class TaskLogInWithGoogle extends AbstractRestTask<GoogleCredentials, LoginResul
         return new Request.Builder()
                 .addHeader("Authorization", "access " + credentials.getToken())
                 .post(requestBody)
-                .url(BASE_URI + "/log-in-with-google")
+                .url(getBaseUri() + "/log-in-with-google")
                 .build();
     }
 }

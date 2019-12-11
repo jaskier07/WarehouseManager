@@ -1,20 +1,21 @@
 package pl.kania.warehousemanagerclient.services.tasks;
 
+import android.content.Context;
 import android.util.Log;
 
 import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static pl.kania.warehousemanagerclient.services.tasks.RestService.BASE_URI_PRODUCT;
+
 
 class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
 
     private final Runnable onSuccess;
     private final Runnable onFailure;
 
-    TaskDeleteProduct(String token, Runnable onSuccess, Runnable onFailure) {
-        super(token);
+    TaskDeleteProduct(String token, Runnable onSuccess, Runnable onFailure, Context context) {
+        super(token, context);
         this.onSuccess = onSuccess;
         this.onFailure = onFailure;
     }
@@ -42,7 +43,7 @@ class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
     private Request getRequest(Long productId) {
         return new Request.Builder()
                 .addHeader(AUTH_HEADER, getAuthValue())
-                .url(BASE_URI_PRODUCT + "/" + productId + "/deletion")
+                .url(getBaseProductUri() + "/" + productId + "/deletion")
                 .delete()
                 .build();
     }

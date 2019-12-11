@@ -1,8 +1,8 @@
 package pl.kania.warehousemanagerclient.ui.fragments;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,25 +12,22 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 
 import pl.kania.warehousemanagerclient.R;
 import pl.kania.warehousemanagerclient.model.entities.Product;
-import pl.kania.warehousemanagerclient.services.tasks.RestService;
-import pl.kania.warehousemanagerclient.utils.FragmentLoader;
+import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
-import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;
+public class AddProductFragment extends AbstractFragment {
 
-public class AddProductFragment extends Fragment {
-
-    private SharedPreferences sharedPreferences;
+    public AddProductFragment(SharedPreferences sharedPreferences, DatabaseManager db) {
+        super(sharedPreferences, db);
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.add_product_fragment, container, false);
-        sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
         EditText manufacturer = view.findViewById(R.id.manufacturerValueAdd);
         EditText model = view.findViewById(R.id.modelValueAdd);
@@ -43,7 +40,9 @@ public class AddProductFragment extends Fragment {
                         .modelName(model.getText().toString())
                         .price(TextParser.parseDouble(price))
                         .build();
-                new RestService(sharedPreferences).addNewProduct(product, () -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager(), sharedPreferences));
+                //new RestService(sharedPreferences).addNewProduct(product, () -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager(), sharedPreferences));
+                long id = getDb().insertProduct(product);
+                getDb().selectProduct(id).ifPresent(p -> Log.i("product added", p.toString()));
             } else {
                 showInfoInvalidNumber();
             }

@@ -7,7 +7,9 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import pl.kania.warehousemanagerclient.model.entities.Product;
 
@@ -24,6 +26,10 @@ public class DatabaseManager {
     private SQLiteDatabase db;
     private Context context;
 
+    public DatabaseManager(Context context) {
+        this.context = context;
+    }
+
     public DatabaseManager open() throws SQLException {
         dbHelper = new DatabaseHelper(context);
         db = dbHelper.getWritableDatabase();
@@ -34,46 +40,92 @@ public class DatabaseManager {
         dbHelper.close();
     }
 
-    public void insertAll(List<Product> products) {
-        products.forEach(this::insert);
+    public void insertAllProducts(List<Product> products) {
+        products.forEach(this::insertProduct);
     }
 
-    public boolean insert(Product product) {
-        ContentValues cv = mapProductToContentValues(product, true);
-        boolean inserted = db.insert(PRODUCT_TABLE_NAME, null, cv) > 0;
-        if (!inserted) {
+    public Long insertProduct(Product product) {
+        open();
+        final ContentValues cv = mapProductToContentValues(product, true);
+        long id = db.insert(PRODUCT_TABLE_NAME, null, cv);
+        if (id == -1) {
             Log.e("insert", "product has not been inserted");
         }
-        return inserted;
+        close();
+        return id;
     }
 
-    public boolean delete(long id) {
-        boolean inserted = db.delete(PRODUCT_TABLE_NAME, _ID + "=" + id, null) > 0;
+    public List<Product> selectAllProducts() {
+        open();
+        final List<Product> products = new ArrayList<>();
+        final Cursor cursor = db.rawQuery("SELECT * FROM " + PRODUCT_TABLE_NAME, null);
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                products.add(mapCursorToProduct(cursor));
+                cursor.moveToNext();
+            }
+        }
+        close();
+        return products;
+    }
+
+    public Optional<Product> selectProduct(Long id) {
+        open();
+        final Cursor cursor = db.rawQuery("SELECT * FROM " + PRODUCT_TABLE_NAME + " WHERE " + _ID + " = " + id, null);
+        if (cursor.moveToFirst()) {
+            if (!cursor.isAfterLast()) {
+                close();
+                return Optional.of(mapCursorToProduct(cursor));
+            }
+        }
+        close();
+        return Optional.empty();
+    }
+
+    private Product mapCursorToProduct(Cursor cursor) {
+        Product product = new Product();
+        product.setId(cursor.getLong(0));
+        product.setManufacturerName(cursor.getString(1));
+        product.setModelName(cursor.getString(2));
+        product.setPrice(cursor.getDouble(3));
+        product.setQuantity(cursor.getInt(4));
+        return product;
+    }
+
+    public boolean deleteProduct(Long productId) {
+        open(); // TODO sprawdzenie uprawnień
+        boolean inserted = db.delete(PRODUCT_TABLE_NAME, _ID + "=" + productId, null) > 0;
         if (!inserted) {
             Log.e("delete", "product has not been deleted");
         }
+        close();
         return inserted;
     }
 
-    public boolean updateNonQuantityValues(Long id, Product product) {
-        ContentValues cv = mapProductToContentValues(product, false);
+    public boolean updateNonQuantityProductValues(Long id, Product product) {
+        open();
+        final ContentValues cv = mapProductToContentValues(product, false);
         boolean updated = db.update(PRODUCT_TABLE_NAME, cv, _ID + " = " + id, null) > 0;
         if (!updated) {
             Log.e("update", "product has not been updated");
         }
+        close();
         return updated;
     }
 
-    public boolean updateQuantityValue(Long id, int change) {
+    public boolean updateQuantityProductValue(Long id, int change) {
+        open();
         final Cursor cursor = db.rawQuery("UPDATE product SET quantity = quantity + " + change + " WHERE id = " + id, null);
         if (cursor != null) {
             final boolean updated = cursor.moveToFirst();
             if (!updated) {
                 Log.e("update", "product's quantity has not been updated");
             }
+            close();
             return updated;
         }
         Log.e("update", "product's quantity has not been updated");
+        close();
         return false;
     }
 

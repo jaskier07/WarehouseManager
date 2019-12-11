@@ -1,5 +1,6 @@
 package pl.kania.warehousemanagerclient.services.tasks;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 
 import java.util.List;
@@ -16,53 +17,52 @@ import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_
 
 public class RestService {
 
-    static final String BASE_URI = "http://daf333f0.ngrok.io";
-    static final String BASE_URI_PRODUCT = BASE_URI + "/product";
-    public static final String BASE_URI_LOGIN = BASE_URI + "/login";
     private SharedPreferences sharedPreferences;
+    private Context context;
 
-    public RestService(SharedPreferences sharedPreferences) {
+    public RestService(SharedPreferences sharedPreferences, Context context) {
         this.sharedPreferences = sharedPreferences;
+        this.context = context;
     }
 
     public void getAllProducts(Consumer<List<Product>> updateProducts) {
-        new TaskGetAllProducts(getToken(), updateProducts).execute();
+        new TaskGetAllProducts(getToken(), updateProducts, context).execute();
     }
 
     public void addNewProduct(Product product, Runnable afterAdd) {
-        new TaskAddProduct(getToken(), afterAdd).execute(product);
+        new TaskAddProduct(getToken(), afterAdd, context).execute(product);
     }
 
     public void deleteProduct(Long productId, Runnable afterDelete, Runnable onFailure) {
-        new TaskDeleteProduct(getToken(), afterDelete, onFailure).execute(productId);
+        new TaskDeleteProduct(getToken(), afterDelete, onFailure, context).execute(productId);
     }
 
     public void decreaseProductQuantity(ProductQuantity productQuantity, Runnable afterDecrease, Consumer<String> onFailed) {
-        new TaskDecreaseProductQuantity(getToken(), afterDecrease, onFailed).execute(productQuantity);
+        new TaskDecreaseProductQuantity(getToken(), afterDecrease, onFailed, context).execute(productQuantity);
     }
 
     public void increaseProductQuantity(ProductQuantity productQuantity, Runnable afterIncrease) {
-        new TaskIncreaseProductQuantity(getToken(), afterIncrease).execute(productQuantity);
+        new TaskIncreaseProductQuantity(getToken(), afterIncrease, context).execute(productQuantity);
     }
 
     public void updateProduct(Product product, Runnable afterUpdate) {
-        new TaskUpdateProduct(getToken(), afterUpdate).execute(product);
+        new TaskUpdateProduct(getToken(), afterUpdate, context).execute(product);
     }
 
     public LoginResult logInWithGoogle(GoogleCredentials credentials) throws ExecutionException, InterruptedException {
-       return new TaskLogInWithGoogle().execute(credentials).get();
+       return new TaskLogInWithGoogle(context).execute(credentials).get();
     }
 
     public LoginResult signInWithGoogle(GoogleCredentials credentials) throws ExecutionException, InterruptedException {
-        return new TaskSignInWithGoogle().execute(credentials).get();
+        return new TaskSignInWithGoogle(context).execute(credentials).get();
     }
 
     public boolean checkToken(String token) throws ExecutionException, InterruptedException {
-        return new TaskCheckToken().execute(token).get();
+        return new TaskCheckToken(context).execute(token).get();
     }
 
     public LoginResult exchangeCredentialsForToken(UserCredentials userCredentials) throws ExecutionException, InterruptedException {
-        return new TaskLogIn().execute(userCredentials).get();
+        return new TaskLogIn(context).execute(userCredentials).get();
     }
 
     private String getToken() {
@@ -70,6 +70,6 @@ public class RestService {
     }
 
     public LoginResult signIn(UserCredentials userCredentials) throws ExecutionException, InterruptedException {
-        return new TaskSignIn().execute(userCredentials).get();
+        return new TaskSignIn(context).execute(userCredentials).get();
     }
 }

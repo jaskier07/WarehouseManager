@@ -1,5 +1,6 @@
 package pl.kania.warehousemanagerclient.services.tasks;
 
+import android.content.Context;
 import android.os.AsyncTask;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,13 +9,12 @@ import java.io.IOException;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import pl.kania.warehousemanagerclient.services.BaseUriProvider;
 
-@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter(value = AccessLevel.PROTECTED)
 public abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
 
@@ -24,9 +24,15 @@ public abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
             .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String token;
+    private BaseUriProvider baseUriProvider;
 
-    AbstractRestTask(String token) {
+    AbstractRestTask(String token, Context context) {
         this.token = token;
+        this.baseUriProvider = new BaseUriProvider(context);
+    }
+
+    AbstractRestTask(Context context) {
+        this.baseUriProvider = new BaseUriProvider(context);
     }
 
     protected MediaType getMediaType() {
@@ -39,5 +45,13 @@ public abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
 
     protected String getAuthValue() {
         return "bearer " + token;
+    }
+
+    protected String getBaseProductUri() {
+        return baseUriProvider.getBASE_URI_PRODUCT();
+    }
+
+    protected String getBaseUri() {
+        return baseUriProvider.getBASE_URI();
     }
 }

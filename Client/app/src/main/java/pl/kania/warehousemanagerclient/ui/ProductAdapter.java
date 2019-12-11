@@ -20,9 +20,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.model.dto.ProductQuantity;
 import pl.kania.warehousemanagerclient.model.entities.Product;
-import pl.kania.warehousemanagerclient.services.tasks.RestService;
+import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
 import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;
@@ -31,12 +30,15 @@ import static pl.kania.warehousemanagerclient.utils.TextParser.getValidIntegerVa
 
 public class ProductAdapter extends ArrayAdapter<Product> {
 
+    private static final int NO_CHANGE_IN_QUANTITY = 0;
     private final Activity activity;
+    private final DatabaseManager db;
     private SharedPreferences sharedPreferences;
 
-    public ProductAdapter(@NonNull Context context, Activity activity) {
+    public ProductAdapter(@NonNull Context context, Activity activity, DatabaseManager db) {
         super(context, 0, new ArrayList<>());
         this.activity = activity;
+        this.db = db;
     }
 
     @NonNull
@@ -62,25 +64,46 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         EditText decreaseBy = convertView.findViewById(R.id.decreaseByValue);
 
         Button update = convertView.findViewById(R.id.buttonUpdate);
-        update.setOnClickListener(c -> new RestService(sharedPreferences).updateProduct(
-                Product.builder()
+        update.setOnClickListener(c -> //new RestService(sharedPreferences).updateProduct(
+                db.updateNonQuantityProductValues(TextParser.parseLong(idValue), Product.builder()
                         .id(TextParser.parseLong(idValue))
                         .manufacturerName(TextParser.getText(manufacturerValue))
                         .modelName(TextParser.getText(modelValue))
                         .price(getValidDoubleValue(priceValue, this::showInfoInvalidNumber))
                         .quantity(TextParser.parseInt(quantityValue))
-                        .build(), this::updateArrayAdapter));
+                        .build()));//, this::updateArrayAdapter));
         Button delete = convertView.findViewById(R.id.buttonDelete);
-        delete.setOnClickListener(c -> new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter,
-                this::showInfoNoPermission));
+        delete.setOnClickListener(c -> deleteProduct(TextParser.parseLong(idValue)));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
-        increase.setOnClickListener(c -> new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
-                getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
-        Button decrease = convertView.findViewById(R.id.buttonDecrease);
-        decrease.setOnClickListener(c -> new RestService(sharedPreferences).decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
-                getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter, this::showInfo));
+        increase.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue), getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)));
+                Button decrease = convertView.findViewById(R.id.buttonDecrease);
+        decrease.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue), getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber)));
 
         return convertView;
+    }
+
+    private void changeQuantity(Long id, Integer value) {
+//        new RestService(sharedPreferences).decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
+//                getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter, this::showInfo);
+        //   new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
+        //           getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
+        if (value != NO_CHANGE_IN_QUANTITY) {
+            boolean updated = db.updateQuantityProductValue(id, value);
+            if (updated) {
+                updateArrayAdapter();
+            }
+        }
+    }
+
+    private void deleteProduct(Long productId) {
+        //new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter,
+        //this::showInfoNoPermission));
+        // TODO pobranie id zalogowanego użytkownika
+        // TODO pobranie jego roli
+        // TODO przekazanie do metody wraz z akcją na brak uprawnień
+        if (db.deleteProduct(productId)) {
+            updateArrayAdapter();
+        }
     }
 
     private void showInfo(String info) {
@@ -96,7 +119,8 @@ public class ProductAdapter extends ArrayAdapter<Product> {
     }
 
     private void updateArrayAdapter() {
-        new RestService(sharedPreferences).getAllProducts(prod -> updateList(activity).accept(prod));
+        updateList(activity).accept(db.selectAllProducts());
+//        new RestService(sharedPreferences).getAllProducts(prod -> updateList(activity).accept(prod));
     }
 
     private String getNullSafeNumberValue(Number number) {
