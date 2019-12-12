@@ -41,8 +41,8 @@ public class AddProductFragment extends AbstractFragment {
                         .price(TextParser.parseDouble(price))
                         .build();
                 //new RestService(sharedPreferences).addNewProduct(product, () -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager(), sharedPreferences));
-                long id = getDb().insertProduct(product);
-                getDb().selectProduct(id).ifPresent(p -> Log.i("product added", p.toString()));
+                long id = getDb().getProductDao().insertProduct(product);
+                getDb().getProductDao().selectProduct(id).ifPresent(p -> Log.i("product added", p.toString()));
             } else {
                 showInfoInvalidNumber();
             }

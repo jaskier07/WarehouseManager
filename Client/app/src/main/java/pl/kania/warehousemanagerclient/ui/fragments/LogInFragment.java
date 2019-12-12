@@ -55,6 +55,7 @@ public class LogInFragment extends AbstractFragment {
     public LogInFragment(SharedPreferences sharedPreferences, DatabaseManager db) {
         super(sharedPreferences, db);
         this.restService = new RestService(sharedPreferences, getContext());
+        this.configurationProvider = new ConfigurationProvider(getContext());
     }
 
     @Nullable

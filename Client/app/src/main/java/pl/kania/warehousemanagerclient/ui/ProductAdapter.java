@@ -65,7 +65,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
 
         Button update = convertView.findViewById(R.id.buttonUpdate);
         update.setOnClickListener(c -> //new RestService(sharedPreferences).updateProduct(
-                db.updateNonQuantityProductValues(TextParser.parseLong(idValue), Product.builder()
+                db.getProductDao().updateNonQuantityProductValues(TextParser.parseLong(idValue), Product.builder()
                         .id(TextParser.parseLong(idValue))
                         .manufacturerName(TextParser.getText(manufacturerValue))
                         .modelName(TextParser.getText(modelValue))
@@ -88,7 +88,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         //   new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
         //           getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
         if (value != NO_CHANGE_IN_QUANTITY) {
-            boolean updated = db.updateQuantityProductValue(id, value);
+            boolean updated = db.getProductDao().updateQuantityProductValue(id, value);
             if (updated) {
                 updateArrayAdapter();
             }
@@ -101,7 +101,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         // TODO pobranie id zalogowanego użytkownika
         // TODO pobranie jego roli
         // TODO przekazanie do metody wraz z akcją na brak uprawnień
-        if (db.deleteProduct(productId)) {
+        if (db.getProductDao().deleteProduct(productId)) {
             updateArrayAdapter();
         }
     }
@@ -119,7 +119,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
     }
 
     private void updateArrayAdapter() {
-        updateList(activity).accept(db.selectAllProducts());
+        updateList(activity).accept(db.getProductDao().selectAllProducts());
 //        new RestService(sharedPreferences).getAllProducts(prod -> updateList(activity).accept(prod));
     }
 
