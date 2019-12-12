@@ -1,6 +1,5 @@
 package pl.kania.warehousemanager.model.db;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import pl.kania.warehousemanager.model.WarehouseRole;
@@ -13,7 +12,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Entity
 public class User {
@@ -32,4 +30,9 @@ public class User {
     @Column(name = "ROLE")
     private WarehouseRole role;
 
+    public User(String login, String password, WarehouseRole role) {
+        this.login = login;
+        this.password = password;
+        this.role = role;
+    }
 }

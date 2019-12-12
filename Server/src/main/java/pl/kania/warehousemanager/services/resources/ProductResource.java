@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.resources;
+package pl.kania.warehousemanager.services.resources;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import pl.kania.warehousemanager.dao.ProductRepository;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.ChangeQuantityResult;
-import pl.kania.warehousemanager.security.JWTService;
+import pl.kania.warehousemanager.services.dao.ProductRepository;
+import pl.kania.warehousemanager.services.security.JWTService;
 
 import javax.ws.rs.QueryParam;
 import java.net.URI;

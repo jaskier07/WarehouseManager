@@ -1,6 +1,5 @@
-package pl.kania.warehousemanager.dao;
+package pl.kania.warehousemanager.services.dao;
 
-import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;

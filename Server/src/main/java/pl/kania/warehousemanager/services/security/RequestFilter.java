@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.security;
+package pl.kania.warehousemanager.services.security;
 
 import org.apache.catalina.connector.RequestFacade;
 import org.apache.catalina.connector.ResponseFacade;

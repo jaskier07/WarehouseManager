@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.security;
+package pl.kania.warehousemanager.services.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -17,11 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import pl.kania.warehousemanager.beans.HeaderExtractor;
-import pl.kania.warehousemanager.dao.ClientDetailsRepository;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
 import pl.kania.warehousemanager.model.db.User;
+import pl.kania.warehousemanager.services.beans.HeaderExtractor;
+import pl.kania.warehousemanager.services.dao.ClientDetailsRepository;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -78,6 +78,20 @@ public class JWTService {
         } catch (IllegalArgumentException e) {
             return false;
         }
+    }
+
+    public Optional<String> getClientId(String header) {
+        final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header, new ArrayList<>());
+        if (!token.isPresent()) {
+            return Optional.empty();
+        }
+        final DecodedJWT decodedJwt = JWT.decode(token.get());
+
+        final Claim clientIdClaim = decodedJwt.getClaim("clientId");
+        if (clientIdClaim.isNull()) {
+            return Optional.empty();
+        }
+        return Optional.of(clientIdClaim.asString());
     }
 
     public boolean checkPermissions(String header, Consumer<String> responseSetter) {

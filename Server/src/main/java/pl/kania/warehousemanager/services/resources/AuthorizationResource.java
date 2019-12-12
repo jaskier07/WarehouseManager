@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.resources;
+package pl.kania.warehousemanager.services.resources;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.Value;
@@ -11,15 +11,15 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.kania.warehousemanager.Strings;
-import pl.kania.warehousemanager.beans.HeaderExtractor;
-import pl.kania.warehousemanager.dao.ClientDetailsRepository;
-import pl.kania.warehousemanager.dao.UserRepository;
 import pl.kania.warehousemanager.model.UserCredentials;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
 import pl.kania.warehousemanager.model.db.User;
 import pl.kania.warehousemanager.model.dto.LoginResult;
-import pl.kania.warehousemanager.security.JWTService;
+import pl.kania.warehousemanager.services.beans.HeaderExtractor;
+import pl.kania.warehousemanager.services.dao.ClientDetailsRepository;
+import pl.kania.warehousemanager.services.dao.UserRepository;
+import pl.kania.warehousemanager.services.security.JWTService;
 
 import java.util.ArrayList;
 import java.util.List;

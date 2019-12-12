@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.beans;
+package pl.kania.warehousemanager.services.beans;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -6,13 +6,13 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
-import pl.kania.warehousemanager.dao.ClientDetailsRepository;
-import pl.kania.warehousemanager.dao.ProductRepository;
-import pl.kania.warehousemanager.dao.UserRepository;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
 import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.db.User;
+import pl.kania.warehousemanager.services.dao.ClientDetailsRepository;
+import pl.kania.warehousemanager.services.dao.ProductRepository;
+import pl.kania.warehousemanager.services.dao.UserRepository;
 
 @Component
 public class InitialDataLoader implements ApplicationRunner {
@@ -33,30 +33,29 @@ public class InitialDataLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        User user = new User(null, "user", passwordEncoder.encode(environment.getProperty("test.user.password")), WarehouseRole.EMPLOYEE);
+        final User user = new User("user", passwordEncoder.encode(environment.getProperty("test.user.password")), WarehouseRole.EMPLOYEE);
         userRepository.save(user);
-        User manager = new User(null, "admin", passwordEncoder.encode(environment.getProperty("test.manager.password")), WarehouseRole.MANAGER);
+        final User manager = new User("admin", passwordEncoder.encode(environment.getProperty("test.manager.password")), WarehouseRole.MANAGER);
         userRepository.save(manager);
 
-        ClientDetails oauthClientToken = new ClientDetails();
+        final ClientDetails oauthClientToken = new ClientDetails();
         oauthClientToken.setClientId(environment.getProperty("android.client.id"));
         oauthClientToken.setClientSecret(passwordEncoder.encode(environment.getProperty("android.client.secret")));
-        oauthClientToken.setScope("read");
-        oauthClientToken.setAuthorizedGrantTypes("password,authorization_code");
-        oauthClientToken.setWebServerRedirectUri("https://www.getpostman.com/oauth2/callback");
-        oauthClientToken.setAuthorities("USER");
-        oauthClientToken.setAccessTokenValidity(10800);
-        oauthClientToken.setRefreshTokenValidity(2592000);
         clientRepository.save(oauthClientToken);
 
-        Product samsung = new Product();
+        final ClientDetails oauthClientToken2 = new ClientDetails();
+        oauthClientToken2.setClientId(environment.getProperty("android.client2.id"));
+        oauthClientToken2.setClientSecret(passwordEncoder.encode(environment.getProperty("android.client2.secret")));
+        clientRepository.save(oauthClientToken2);
+
+        final Product samsung = new Product();
         samsung.setManufacturerName("Samsung");
         samsung.setModelName("Galaxy s8");
         samsung.setPrice(19.90D);
         samsung.setQuantity(5);
         productRepository.save(samsung);
 
-        Product iphone = new Product();
+        final Product iphone = new Product();
         iphone.setManufacturerName("Apple");
         iphone.setModelName("X");
         iphone.setQuantity(23);

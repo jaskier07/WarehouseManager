@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.dao;
+package pl.kania.warehousemanager.services.dao;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;

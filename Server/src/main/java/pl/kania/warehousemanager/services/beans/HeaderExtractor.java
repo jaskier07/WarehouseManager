@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.beans;
+package pl.kania.warehousemanager.services.beans;
 
 import org.springframework.stereotype.Component;
 import pl.kania.warehousemanager.model.UserCredentials;
