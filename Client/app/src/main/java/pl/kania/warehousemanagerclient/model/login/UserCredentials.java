@@ -1,6 +1,6 @@
 package pl.kania.warehousemanagerclient.model.login;
 
-import java.util.Base64;
+import android.util.Base64;
 
 import lombok.NonNull;
 import lombok.Value;
@@ -18,6 +18,6 @@ public class UserCredentials {
 
     public String getEncoded() {
         final String textToEncode = login + "." + password;
-        return new String(Base64.getEncoder().encode(textToEncode.getBytes()));
+        return new String(Base64.encode(textToEncode.getBytes(), Base64.NO_WRAP));
     }
 }
