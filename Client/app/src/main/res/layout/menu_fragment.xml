@@ -28,4 +28,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="-" />
+
+    <Button
+        android:id="@+id/buttonSync"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#4CAF50"
+        android:text="Synchronize now!" />
+
+    <TextView
+        android:id="@+id/sync_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>

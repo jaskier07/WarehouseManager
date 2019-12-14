@@ -2,7 +2,6 @@ package pl.kania.warehousemanagerclient.ui.fragments;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,9 +39,7 @@ public class AddProductFragment extends AbstractFragment {
                         .modelName(model.getText().toString())
                         .price(TextParser.parseDouble(price))
                         .build();
-                //new RestService(sharedPreferences).addNewProduct(product, () -> FragmentLoader.load(new ProductListViewFragment(), getFragmentManager(), sharedPreferences));
-                long id = getDb().getProductDao().insertProduct(product);
-                getDb().getProductDao().selectProduct(id).ifPresent(p -> Log.i("product added", p.toString()));
+                getDb().insertProduct(product);
             } else {
                 showInfoInvalidNumber();
             }

@@ -14,9 +14,15 @@ import androidx.annotation.Nullable;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 
+import java.util.List;
+
 import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnDevice;
 import pl.kania.warehousemanagerclient.model.login.LoggingMethod;
+import pl.kania.warehousemanagerclient.services.ConfigurationProvider;
+import pl.kania.warehousemanagerclient.services.SynchronizationService;
 import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
+import pl.kania.warehousemanagerclient.services.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
 import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_LOGGING_METHOD;
@@ -26,6 +32,9 @@ import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_
 public class MenuFragment extends AbstractFragment {
 
     private GoogleSignInClient googleClientSignIn;
+    private RestService restService;
+    private SynchronizationService synchronizationService;
+    private TextView textView;
 
     MenuFragment(SharedPreferences sharedPreferences, DatabaseManager db, GoogleSignInClient googleClientSignIn) {
         super(sharedPreferences, db);
@@ -36,6 +45,8 @@ public class MenuFragment extends AbstractFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.menu_fragment, container, false);
+        restService = new RestService(getSharedPreferences(), getContext());
+        synchronizationService = new SynchronizationService(getDb(), new ConfigurationProvider(getContext()));
 
         final Button addProduct = view.findViewById(R.id.buttonGoToAddProduct);
         addProduct.setOnClickListener(k -> FragmentLoader.load(new AddProductFragment(getSharedPreferences(), getDb()), getFragmentManager()));
@@ -46,10 +57,21 @@ public class MenuFragment extends AbstractFragment {
         loggedAs.setText("You are logged as " + userLogin);
         final Button logout = view.findViewById(R.id.buttonLogout);
         logout.setOnClickListener(c -> actionLogout());
+        textView = view.findViewById(R.id.sync_info);
+        final Button sync = view.findViewById(R.id.buttonSync);
+        sync.setOnClickListener(c -> actionSync(textView));
 
         return view;
-
 }
+
+    private void actionSync(TextView textView) {
+        restService.synchronize(synchronizationService.getDataToSynchronizeOnServer(), this::afterSync);
+    }
+
+    private void afterSync(DataToSyncOnDevice dataToSyncOnDevice) {
+        List<String> messages = synchronizationService.updateDataOnDevice(dataToSyncOnDevice);
+        textView.setText(messages.toString()); // TODO pretty formatting
+    }
 
     private void actionLogout() {
         getSharedPreferences().edit().putString(SHARED_PREFERENCES_TOKEN, null).commit();

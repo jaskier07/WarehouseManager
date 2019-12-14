@@ -54,8 +54,6 @@ public class LogInFragment extends AbstractFragment {
 
     public LogInFragment(SharedPreferences sharedPreferences, DatabaseManager db) {
         super(sharedPreferences, db);
-        this.restService = new RestService(sharedPreferences, getContext());
-        this.configurationProvider = new ConfigurationProvider(getContext());
     }
 
     @Nullable
@@ -63,6 +61,12 @@ public class LogInFragment extends AbstractFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.log_in_fragment, container, false);
+        if (restService == null) {
+            this.restService = new RestService(getSharedPreferences(), getContext());
+        }
+        if (configurationProvider == null) {
+            this.configurationProvider = new ConfigurationProvider(getContext());
+        }
 
         info = view.findViewById(R.id.log_in_info);
         info.setText("-");

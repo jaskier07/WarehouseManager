@@ -17,12 +17,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        db.execSQL(Product.ProductDll.DROP_TABLE);
         db.execSQL(Product.ProductDll.CREATE_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL(Product.ProductDll.DROP_TABLE);
         onCreate(db);
     }
 }

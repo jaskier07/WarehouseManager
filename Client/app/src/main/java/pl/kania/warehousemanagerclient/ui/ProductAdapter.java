@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.model.IdType;
 import pl.kania.warehousemanagerclient.model.entities.Product;
 import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.utils.TextParser;
@@ -59,19 +60,19 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         TextView quantityValue = convertView.findViewById(R.id.quantityValue);
         quantityValue.setText(getNullSafeNumberValue(product.getQuantity()));
         TextView idValue = convertView.findViewById(R.id.idValue);
-        idValue.setText(getNullSafeNumberValue(product.getId()));
+        idValue.setText(getNullSafeNumberValue(product.getLocalId()));
         EditText increaseBy = convertView.findViewById(R.id.increaseByValue);
         EditText decreaseBy = convertView.findViewById(R.id.decreaseByValue);
 
         Button update = convertView.findViewById(R.id.buttonUpdate);
         update.setOnClickListener(c -> //new RestService(sharedPreferences).updateProduct(
-                db.getProductDao().updateNonQuantityProductValues(TextParser.parseLong(idValue), Product.builder()
+                db.updateNonQuantityProductValues(TextParser.parseLong(idValue), Product.builder()
                         .id(TextParser.parseLong(idValue))
                         .manufacturerName(TextParser.getText(manufacturerValue))
                         .modelName(TextParser.getText(modelValue))
                         .price(getValidDoubleValue(priceValue, this::showInfoInvalidNumber))
                         .quantity(TextParser.parseInt(quantityValue))
-                        .build()));//, this::updateArrayAdapter));
+                        .build(), IdType.LOCAL));//, this::updateArrayAdapter));
         Button delete = convertView.findViewById(R.id.buttonDelete);
         delete.setOnClickListener(c -> deleteProduct(TextParser.parseLong(idValue)));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
@@ -88,7 +89,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         //   new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
         //           getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
         if (value != NO_CHANGE_IN_QUANTITY) {
-            boolean updated = db.getProductDao().updateQuantityProductValue(id, value);
+            boolean updated = db.updateQuantityProductValue(id, value, IdType.LOCAL);
             if (updated) {
                 updateArrayAdapter();
             }
@@ -101,7 +102,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         // TODO pobranie id zalogowanego użytkownika
         // TODO pobranie jego roli
         // TODO przekazanie do metody wraz z akcją na brak uprawnień
-        if (db.getProductDao().deleteProduct(productId)) {
+        if (db.deleteProduct(productId, IdType.LOCAL)) {
             updateArrayAdapter();
         }
     }
@@ -119,7 +120,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
     }
 
     private void updateArrayAdapter() {
-        updateList(activity).accept(db.getProductDao().selectAllProducts());
+        updateList(activity).accept(db.selectAllNonRemovedProducts());
 //        new RestService(sharedPreferences).getAllProducts(prod -> updateList(activity).accept(prod));
     }
 

@@ -30,8 +30,8 @@ public class ProductListViewFragment extends AbstractFragment {
         final ListView view = (ListView)inflater.inflate(R.layout.product_list_view_fragment, container, false);
         productAdapter = new ProductAdapter(view.getContext(), getActivity(), getDb());
         view.setAdapter(productAdapter);
-        productAdapter.updateList(getActivity()).accept(getDb().getProductDao().selectAllProducts());
-//        new RestService(getSharedPreferences()).getAllProducts(productAdapter.updateList(getActivity()));
+        productAdapter.updateList(getActivity()).accept(getDb().selectAllNonRemovedProducts());
+
 
         return view;
     }

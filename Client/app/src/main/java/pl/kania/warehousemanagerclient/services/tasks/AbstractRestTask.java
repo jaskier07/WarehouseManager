@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -15,12 +16,19 @@ import okhttp3.Request;
 import okhttp3.Response;
 import pl.kania.warehousemanagerclient.services.ConfigurationProvider;
 
+/**
+ * @param <P> Input data
+ * @param <R> Output data
+ */
 @Getter(value = AccessLevel.PROTECTED)
 public abstract class AbstractRestTask<P, R> extends AsyncTask<P, Void, R> {
 
     protected static final String AUTH_HEADER = "Authorization";
     private static final String MEDIA_TYPE = "application/json; charset=utf-8";
     private final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(5, TimeUnit.MINUTES)
+            .writeTimeout(5, TimeUnit.MINUTES)
+            .readTimeout(5, TimeUnit.MINUTES)
             .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String token;
