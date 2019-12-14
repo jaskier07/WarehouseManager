@@ -66,13 +66,16 @@ public class ProductAdapter extends ArrayAdapter<Product> {
 
         Button update = convertView.findViewById(R.id.buttonUpdate);
         update.setOnClickListener(c -> //new RestService(sharedPreferences).updateProduct(
-                db.updateNonQuantityProductValues(TextParser.parseLong(idValue), Product.builder()
-                        .id(TextParser.parseLong(idValue))
+                db.updateNonQuantityProductValues(Product.builder()
+                        .id(product.getId())
                         .manufacturerName(TextParser.getText(manufacturerValue))
                         .modelName(TextParser.getText(modelValue))
                         .price(getValidDoubleValue(priceValue, this::showInfoInvalidNumber))
                         .quantity(TextParser.parseInt(quantityValue))
-                        .build(), IdType.LOCAL));//, this::updateArrayAdapter));
+                        .lastModified(product.getLastModified())
+                        .localId(product.getLocalId())
+                        .removed(product.isRemoved())
+                        .build(), IdType.LOCAL, true));//, this::updateArrayAdapter));
         Button delete = convertView.findViewById(R.id.buttonDelete);
         delete.setOnClickListener(c -> deleteProduct(TextParser.parseLong(idValue)));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
@@ -89,7 +92,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         //   new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
         //           getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
         if (value != NO_CHANGE_IN_QUANTITY) {
-            boolean updated = db.updateQuantityProductValue(id, value, IdType.LOCAL);
+            boolean updated = db.updateQuantityProductValue(id, value, IdType.LOCAL, true);
             if (updated) {
                 updateArrayAdapter();
             }
@@ -120,7 +123,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
     }
 
     private void updateArrayAdapter() {
-        updateList(activity).accept(db.selectAllNonRemovedProducts());
+        updateList(activity).accept(db.selectAllNonRemovedProductsWithGlobalId());
 //        new RestService(sharedPreferences).getAllProducts(prod -> updateList(activity).accept(prod));
     }
 

@@ -75,4 +75,27 @@ public class Product {
 //
 //        return new ObjectMapper().readValue(vectorClock, ProductVectorClock.class);
 //    }
+
+    @Override
+    public String toString() {
+        return "Product: " + getManufacturerName() + " " + getModelName() + " (id " + getId() + ") (local id " + getLocalId() + ")";
+    }
+
+    public String getChangedInfo(Product original) {
+        final StringBuilder sb = new StringBuilder();
+        if (!original.getManufacturerName().equals(getManufacturerName())) {
+            sb.append("Change in manufacturer name (" + original.getManufacturerName() + " -> " + getManufacturerName() + ")");
+        }
+        if (!original.getModelName().equals(getModelName())) {
+            sb.append("Change in model name (" + original.getModelName() + " -> " + getModelName() + ")");
+        }
+        if (!original.getPrice().equals(getPrice())) {
+            sb.append("Change in price (" + original.getPrice() + " -> " + getPrice() + ")");
+        }
+        if (!original.getQuantity().equals(getQuantity())) {
+            sb.append("Change in quantity (" + original.getQuantity() + " -> " + getQuantity() + ")");
+        }
+        final String info = sb.toString();
+        return info.isEmpty() ? "Nothing changed?" : info;
+    }
 }

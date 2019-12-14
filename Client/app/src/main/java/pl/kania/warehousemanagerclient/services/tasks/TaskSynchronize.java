@@ -11,25 +11,25 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnDevice;
+import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnServer;
 
-public class TaskSynchronize extends AbstractRestTask<DataToSyncOnServer, DataToSyncOnDevice> {
+public class TaskSynchronize extends AbstractRestTask<DataToSyncOnServer, DataToSyncOnClient> {
 
-    private Consumer<DataToSyncOnDevice> afterSync;
+    private Consumer<DataToSyncOnClient> afterSync;
 
-    TaskSynchronize(String token, Context context, Consumer<DataToSyncOnDevice> afterSync) {
+    TaskSynchronize(String token, Context context, Consumer<DataToSyncOnClient> afterSync) {
         super(token, context);
         this.afterSync = afterSync;
     }
 
     @Override
-    protected DataToSyncOnDevice doInBackground(DataToSyncOnServer... dataToSyncOnServer) {
+    protected DataToSyncOnClient doInBackground(DataToSyncOnServer... dataToSyncOnServer) {
         try {
             final Response response = executeRequest(getRequest(dataToSyncOnServer[0]));
             final ResponseBody body = response.body();
             if (response.isSuccessful() && body != null) {
-                afterSync.accept(getObjectMapper().readValue(body.string(), DataToSyncOnDevice.class));
+                afterSync.accept(getObjectMapper().readValue(body.string(), DataToSyncOnClient.class));
             } else {
                 Log.w("synchronize", "Response body is empty");
             }

@@ -34,6 +34,18 @@ public class ProductMapper {
         return cv;
     }
 
+    public static ContentValues mapNewProductToContentValues(Product product) {
+        final ContentValues cv = new ContentValues();
+        cv.put(_ID, -1);
+        cv.put(MANUFACTURER_NAME, product.getManufacturerName());
+        cv.put(MODEL_NAME, product.getModelName());
+        cv.put(PRICE, product.getPrice());
+        cv.put(REMOVED, product.isRemoved());
+        cv.put(LAST_MODIFIED, product.getLastModified().toString());
+        cv.put(QUANTITY, product.getQuantity());
+        return cv;
+    }
+
     public static Product mapCursorToProduct(Cursor cursor) {
         Product product = new Product();
         product.setId(cursor.getLong(0));

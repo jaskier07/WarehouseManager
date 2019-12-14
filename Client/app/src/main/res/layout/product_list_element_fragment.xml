@@ -92,7 +92,7 @@
         android:layout_below="@+id/quantityTitle"
         android:layout_marginTop="1dp"
         android:gravity="center"
-        android:text="id"
+        android:text="local id"
         android:textAlignment="center"
         android:textSize="18sp" />
 

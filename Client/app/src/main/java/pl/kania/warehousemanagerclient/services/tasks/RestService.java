@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
-import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnDevice;
+import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnServer;
 import pl.kania.warehousemanagerclient.model.dto.ProductQuantity;
 import pl.kania.warehousemanagerclient.model.entities.Product;
@@ -27,7 +27,7 @@ public class RestService {
         this.context = context;
     }
 
-    public void synchronize(DataToSyncOnServer dataToSyncOnServer, Consumer<DataToSyncOnDevice> afterSync) {
+    public void synchronize(DataToSyncOnServer dataToSyncOnServer, Consumer<DataToSyncOnClient> afterSync) {
         new TaskSynchronize(getToken(), context, afterSync).execute(dataToSyncOnServer);
     }
 

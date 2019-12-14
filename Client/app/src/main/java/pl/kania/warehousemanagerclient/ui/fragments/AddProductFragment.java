@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import pl.kania.warehousemanagerclient.R;
 import pl.kania.warehousemanagerclient.model.entities.Product;
 import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
+import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
 public class AddProductFragment extends AbstractFragment {
@@ -39,7 +40,8 @@ public class AddProductFragment extends AbstractFragment {
                         .modelName(model.getText().toString())
                         .price(TextParser.parseDouble(price))
                         .build();
-                getDb().insertProduct(product);
+                getDb().insertProduct(product, false, true);
+                FragmentLoader.load(new ProductListViewFragment(getSharedPreferences(), getDb()), getFragmentManager());
             } else {
                 showInfoInvalidNumber();
             }

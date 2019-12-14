@@ -17,7 +17,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import java.util.List;
 
 import pl.kania.warehousemanagerclient.R;
-import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnDevice;
+import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanagerclient.model.login.LoggingMethod;
 import pl.kania.warehousemanagerclient.services.ConfigurationProvider;
 import pl.kania.warehousemanagerclient.services.SynchronizationService;
@@ -68,9 +68,23 @@ public class MenuFragment extends AbstractFragment {
         restService.synchronize(synchronizationService.getDataToSynchronizeOnServer(), this::afterSync);
     }
 
-    private void afterSync(DataToSyncOnDevice dataToSyncOnDevice) {
-        List<String> messages = synchronizationService.updateDataOnDevice(dataToSyncOnDevice);
-        textView.setText(messages.toString()); // TODO pretty formatting
+    private void afterSync(DataToSyncOnClient dataToSyncOnClient) {
+        List<String> messages = synchronizationService.updateDataOnDevice(dataToSyncOnClient);
+        String formattedMessages = formatMessages(messages);
+        getActivity().runOnUiThread(() -> textView.setText(formattedMessages)); // TODO pretty formatting
+    }
+
+    private String formatMessages(List<String> messages) {
+        if (messages.isEmpty()) {
+            return "Nothing special happened.";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String s : messages) {
+            sb.append("* ");
+            sb.append(s);
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     private void actionLogout() {

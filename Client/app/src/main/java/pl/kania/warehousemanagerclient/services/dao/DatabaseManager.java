@@ -45,27 +45,43 @@ public class DatabaseManager {
     }
 
 
-    public boolean insertAllProducts(List<Product> products) {
+    public boolean insertAllProducts(List<Product> products, boolean hasGlobalId, boolean updateLastModified) {
         boolean allInserted = true;
         for (Product product : products) {
-            if (insertProduct(product) == ERROR) {
+            if (insertProduct(product, hasGlobalId, updateLastModified) == ERROR) {
                 allInserted = false;
             }
         }
         return allInserted;
     }
 
-    public Long insertProduct(Product product) {
-        updateProductLastModified(product);
+    public Long insertProduct(Product product, boolean hasGlobalId, boolean updateLastModified) {
+        if (updateLastModified) {
+            updateProductLastModified(product);
+        }
 
         open();
-        final ContentValues cv = ProductMapper.mapProductToContentValues(product, true);
+        final ContentValues cv = hasGlobalId ? ProductMapper.mapProductToContentValues(product, true) : ProductMapper.mapNewProductToContentValues(product);
         long id = db.insert(PRODUCT_TABLE_NAME, null, cv);
         if (id == ERROR) {
             Log.e("insert", "product has not been inserted");
         }
         close();
         return id;
+    }
+
+    public List<Product> selectAllNonRemovedNewProducts() {
+        open();
+        final List<Product> products = new ArrayList<>();
+        final Cursor cursor = db.rawQuery("SELECT * FROM " + PRODUCT_TABLE_NAME +" WHERE " + REMOVED + " = 0 AND " + _ID + " = -1", null);
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                products.add(ProductMapper.mapCursorToProduct(cursor));
+                cursor.moveToNext();
+            }
+        }
+        close();
+        return products;
     }
 
     public List<Product> selectAllNonRemovedProducts() {
@@ -82,9 +98,23 @@ public class DatabaseManager {
         return products;
     }
 
+    public List<Product> selectAllNonRemovedProductsWithGlobalId() {
+        open();
+        final List<Product> products = new ArrayList<>();
+        final Cursor cursor = db.rawQuery("SELECT * FROM " + PRODUCT_TABLE_NAME +" WHERE " + REMOVED + " = 0 AND " + _ID + " != -1", null);
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                products.add(ProductMapper.mapCursorToProduct(cursor));
+                cursor.moveToNext();
+            }
+        }
+        close();
+        return products;
+    }
+
     public List<Long> selectRemovedProductGlobalIds() {
         open();
-        final Cursor cursor = db.rawQuery("SELECT " + _ID + " FROM " + PRODUCT_TABLE_NAME + " WHERE " + REMOVED + " = 1", null);
+        final Cursor cursor = db.rawQuery("SELECT " + _ID + " FROM " + PRODUCT_TABLE_NAME + " WHERE " + REMOVED + " = 1 AND " + _ID + " != -1", null);
         List<Long> ids = new ArrayList<>();
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
@@ -114,7 +144,7 @@ public class DatabaseManager {
         if (product.isPresent()) {
             // TODO permission check
             product.get().setRemoved(true);
-            updateNonQuantityProductValues(productId, product.get(), idType);
+            updateNonQuantityProductValues(product.get(), idType, false);
             return true;
         } else {
             Log.e("delete", "product has not been deleted because it does not exist (global id =" + product + ")");
@@ -122,11 +152,14 @@ public class DatabaseManager {
         }
     }
 
-    public boolean updateNonQuantityProductValues(Long id, Product product, IdType idType) {
-        updateProductLastModified(product);
+    public boolean updateNonQuantityProductValues(Product product, IdType idType, boolean updateLastModified) {
+        if (updateLastModified) {
+            updateProductLastModified(product);
+        }
 
         open();
         final ContentValues cv = ProductMapper.mapProductToContentValues(product, false);
+        final Long id = idType == IdType.GLOBAL ? product.getId() : product.getLocalId();
         boolean updated = db.update(PRODUCT_TABLE_NAME, cv, idType.getDbKey() + " = " + id, null) > 0;
         if (!updated) {
             Log.e("update", "product has not been updated");
@@ -135,11 +168,13 @@ public class DatabaseManager {
         return updated;
     }
 
-    public boolean updateQuantityProductValue(Long id, int change, IdType idType) {
+    public boolean updateQuantityProductValue(Long id, int change, IdType idType, boolean updateLastModified) {
         open();
         final Optional<Product> product = selectProduct(id, idType);
         if (product.isPresent()) {
-            updateProductLastModified(product.get());
+            if (updateLastModified) {
+                updateProductLastModified(product.get());
+            }
             product.get().setQuantity(product.get().getQuantity() + change);
             int rowsUpdated = db.update(PRODUCT_TABLE_NAME, ProductMapper.mapProductToContentValues(product.get(), true), "WHERE " + _ID + " = " + id, null);
             return rowsUpdated > 0;

@@ -9,6 +9,7 @@ import pl.kania.warehousemanagerclient.model.entities.Product;
 @Getter
 @Setter
 public class DataToSyncOnServer {
-    private List<Product> products;
+    private List<Product> newProducts;
+    private List<Product> existingProducts;
     private List<Long> removedProductsIds;
 }
