@@ -22,6 +22,7 @@ public class DataToSyncOnServer {
     // POTRZEBNE: lista(id, ilość, wektor) i merge na podstawie wektora
 
     // CZYLI: trzeba przesłać wszystkie produkty
-    private List<Product> products;
+    private List<Product> newProducts;
+    private List<Product> existingProducts;
     private List<Long> removedProductsIds;
 }

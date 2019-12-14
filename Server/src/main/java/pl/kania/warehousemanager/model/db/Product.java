@@ -13,13 +13,13 @@ import java.sql.Timestamp;
 @Entity
 @Setter
 @Getter
-public class Product {
+public class Product implements Cloneable{
 
     @Id
     @GeneratedValue
     @Setter(AccessLevel.NONE)
     private Long id;
-
+// TODO do usunięcia z bazy
     @Column(name = "LOCAL_ID")
     private Long localId;
 
@@ -45,17 +45,36 @@ public class Product {
     @Column(name = "LAST_MODIFIED")
     private Timestamp lastModified;
 
-    public void update(Product updatedProduct) {
+    public void updateFrom(Product updatedProduct) {
         setManufacturerName(updatedProduct.getManufacturerName());
         setModelName(updatedProduct.getModelName());
         setPrice(updatedProduct.getPrice());
     }
 
-//    public void setVectorClock(ProductVectorClock clock) throws JsonProcessingException {
+    @Override
+    public Product clone() throws CloneNotSupportedException {
+        Product copy = (Product)super.clone();
+        copy.id = getId();
+        copy.removed = isRemoved();
+        copy.lastModified = getLastModified();
+        copy.localId = getLocalId();
+        copy.manufacturerName = getManufacturerName();
+        copy.modelName = getModelName();
+        copy.price = getPrice();
+        copy.quantity = getQuantity();
+        return copy;
+    }
+
+    //    public void setVectorClock(ProductVectorClock clock) throws JsonProcessingException {
 //        this.vectorClock = clock.toJson();
 //    }
 //
 //    public ProductVectorClock getVectorClock() throws JsonProcessingException {
 //        return new ObjectMapper().readValue(vectorClock, ProductVectorClock.class);
 //    }
+
+    @Override
+    public String toString() {
+        return "Product: " + getManufacturerName() + " " + getModelName() + " (id " + getId() + ") (local id " + getLocalId() + ")";
+    }
 }

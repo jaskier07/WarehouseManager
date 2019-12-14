@@ -77,7 +77,7 @@ public class ProductResource {
             return ResponseEntity.notFound().build();
         }
         Product productFound = productOpt.get();
-        productFound.update(product);
+        productFound.updateFrom(product);
         productDao.save(productFound);
         return ResponseEntity.ok().build();
     }
