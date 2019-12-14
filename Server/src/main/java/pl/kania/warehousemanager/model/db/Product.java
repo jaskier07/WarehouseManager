@@ -1,6 +1,5 @@
 package pl.kania.warehousemanager.model.db;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,11 +16,7 @@ public class Product implements Cloneable{
 
     @Id
     @GeneratedValue
-    @Setter(AccessLevel.NONE)
     private Long id;
-// TODO do usunięcia z bazy
-    @Column(name = "LOCAL_ID")
-    private Long localId;
 
     @Column(name = "MANUFACTURER_NAME")
     private String manufacturerName;
@@ -35,12 +30,11 @@ public class Product implements Cloneable{
     @Column(name = "QUANTITY")
     private Integer quantity = 0;
 
-//    @Setter(AccessLevel.NONE)
-//    @Column(name = "VECTOR_CLOCK")
-//    private String vectorClock;
+    @Column(name = "VECTOR_CLOCK")
+    private String vectorClock;
 
     @Column(name = "REMOVED")
-    private boolean removed = false;
+    private boolean removed;
 
     @Column(name = "LAST_MODIFIED")
     private Timestamp lastModified;
@@ -57,7 +51,6 @@ public class Product implements Cloneable{
         copy.id = getId();
         copy.removed = isRemoved();
         copy.lastModified = getLastModified();
-        copy.localId = getLocalId();
         copy.manufacturerName = getManufacturerName();
         copy.modelName = getModelName();
         copy.price = getPrice();
@@ -75,6 +68,6 @@ public class Product implements Cloneable{
 
     @Override
     public String toString() {
-        return "Product: " + getManufacturerName() + " " + getModelName() + " (id " + getId() + ") (local id " + getLocalId() + ")";
+        return "Product: " + getManufacturerName() + " " + getModelName() + " (id " + getId() + ")";
     }
 }

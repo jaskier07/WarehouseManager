@@ -6,9 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import pl.kania.warehousemanager.model.ProductMapper;
 import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanager.model.dto.DataToSyncOnServer;
+import pl.kania.warehousemanager.model.dto.ProductClient;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
 
 import java.sql.Timestamp;
@@ -40,7 +42,7 @@ public class SynchronizationService {
         final DataToSyncOnClient dataToSyncOnClient = new DataToSyncOnClient();
 
         final Map<Long, Product> serverProducts = getMapNonRemovedServerProductsPerId();
-        final Map<Long, Product> clientProducts = getMapNonRemovedClientProductsPerId(dataToSyncOnServer);
+        final Map<Long, ProductClient> clientProducts = getMapNonRemovedClientProductsPerId(dataToSyncOnServer);
         log.info("Server non-removed products: " + serverProducts.keySet().toString());
         log.info("Client non-removed non-new products: " + clientProducts.keySet().toString());
         log.info("Client new products: " + dataToSyncOnServer.getNewProducts().toString());
@@ -53,7 +55,7 @@ public class SynchronizationService {
         final Map<Long, Long> savedIdsPerLocalIds = saveNewProductsFromClientOnServer(dataToSyncOnServer.getNewProducts());
         dataToSyncOnClient.getSavedProductIdPerLocalId().putAll(savedIdsPerLocalIds);
 
-        final List<Product> newProductsOnClient = getNewProductsToSaveOnClient(serverProducts, clientProducts, clientRemovedProducts);
+        final List<ProductClient> newProductsOnClient = getNewProductsToSaveOnClient(serverProducts, clientProducts, clientRemovedProducts);
         dataToSyncOnClient.getNewProducts().addAll(newProductsOnClient);
         log.info("New products on client: " + newProductsOnClient.toString());
 
@@ -64,7 +66,7 @@ public class SynchronizationService {
         log.info("Products to remove on client: " + productIdsToRemove.toString());
 
         Set<Long> commonProductIds = getProductIdsOnBothServerAndClient(serverProducts, clientProducts);
-        final List<Product> updatedProducts = mergeProducts(serverProducts, clientProducts, commonProductIds);
+        final List<ProductClient> updatedProducts = mergeProducts(serverProducts, clientProducts, commonProductIds);
         dataToSyncOnClient.setUpdatedProducts(updatedProducts);
 
 //        // sync products
@@ -77,19 +79,19 @@ public class SynchronizationService {
          return dataToSyncOnClient;
     }
 
-    private List<Product> mergeProducts(Map<Long, Product> serverProducts, Map<Long, Product> clientProducts, Set<Long> commonProductIds) {
-        final List<Product> productsToUpdateOnClient = new ArrayList<>();
+    private List<ProductClient> mergeProducts(Map<Long, Product> serverProducts, Map<Long, ProductClient> clientProducts, Set<Long> commonProductIds) {
+        final List<ProductClient> productsToUpdateOnClient = new ArrayList<>();
         for (Long id : commonProductIds) {
             final Product serverProduct = serverProducts.get(id);
-            final Product clientProduct = clientProducts.get(id);
+            final ProductClient clientProduct = clientProducts.get(id);
             if (!serverProduct.getLastModified().equals(clientProduct.getLastModified())) {
                 try {
                     if (serverProduct.getLastModified().before(clientProduct.getLastModified())) {
                         // TODO zmiana quantiyt
-                        productRepository.save(clientProduct);
+                        productRepository.save(ProductMapper.mapClientToServer(clientProduct));
                         log.info("Server: updated product (id " + id + ") [server: " + formatTimestamp(serverProduct.getLastModified()) + "][client: " + formatTimestamp(clientProduct.getLastModified()) + "]");
                     } else {
-                        final Product updatedClientProduct = serverProduct.clone();
+                        final ProductClient updatedClientProduct = ProductMapper.mapServerToClient(serverProduct.clone());
                         // TODO zmiana quantity
                         updatedClientProduct.setLocalId(clientProduct.getLocalId());
                         productsToUpdateOnClient.add(updatedClientProduct);
@@ -107,7 +109,7 @@ public class SynchronizationService {
         return dateTimeFormatter.format(lastModified);
     }
 
-    private Set<Long> getProductIdsOnBothServerAndClient(Map<Long, Product> serverProducts, Map<Long, Product> clientProducts) {
+    private Set<Long> getProductIdsOnBothServerAndClient(Map<Long, Product> serverProducts, Map<Long, ProductClient> clientProducts) {
         Set<Long> ids = new HashSet<>();
         for (Long id : serverProducts.keySet()) {
             if (clientProducts.containsKey(id)) {
@@ -117,7 +119,7 @@ public class SynchronizationService {
         return ids;
     }
 
-    private List<Long> getProductIdsToRemoveOnClient(Map<Long, Product> clientProducts, Map<Long, Product> serverRemovedProducts, List<Long> clientRemovedProducts) {
+    private List<Long> getProductIdsToRemoveOnClient(Map<Long, ProductClient> clientProducts, Map<Long, Product> serverRemovedProducts, List<Long> clientRemovedProducts) {
         List<Long> productIdsToRemove = new ArrayList<>();
         for (Long serverRemovedProductId : serverRemovedProducts.keySet()) {
             if (!clientRemovedProducts.contains(serverRemovedProductId) && clientProducts.containsKey(serverRemovedProductId)) {
@@ -140,24 +142,24 @@ public class SynchronizationService {
         }
     }
 
-    private List<Product> getNewProductsToSaveOnClient(Map<Long, Product> serverProducts, Map<Long, Product> clientProducts, List<Long> clientRemovedProducts) {
-        final List<Product> newProducts = new ArrayList<>();
+    private List<ProductClient> getNewProductsToSaveOnClient(Map<Long, Product> serverProducts, Map<Long, ProductClient> clientProducts, List<Long> clientRemovedProducts) {
+        final List<ProductClient> newProducts = new ArrayList<>();
         for (Long serverProductId : serverProducts.keySet()) {
             if (!clientProducts.containsKey(serverProductId) && !clientRemovedProducts.contains(serverProductId)) {
                 final Product product = serverProducts.get(serverProductId);
 //                product.getVectorClock().getNode(environment.getProperty("server.id")).incrementVersion();
 //                productRepository.save(product);
-                newProducts.add(product);
+                newProducts.add(ProductMapper.mapServerToClient(product));
             }
         }
         return newProducts;
     }
 
-    private Map<Long, Long> saveNewProductsFromClientOnServer(List<Product> newClientProducts) {
+    private Map<Long, Long> saveNewProductsFromClientOnServer(List<ProductClient> newClientProducts) {
         final Map<Long, Long> savedProductIdPerLocalId = new HashMap<>();
-        for (Product product : newClientProducts) {
+        for (ProductClient product : newClientProducts) {
 //            product.getVectorClock().getNode(environment.getProperty("server.id")).incrementVersion(); // TODO sprawdzic czy w bazie są zinkrementowane
-            final Product savedProduct = productRepository.save(product);
+            final Product savedProduct = productRepository.save(ProductMapper.mapClientToServer(product));
             savedProductIdPerLocalId.put(product.getLocalId(), savedProduct.getId());
             log.info("Saved " + savedProduct.toString());
         }
@@ -169,10 +171,10 @@ public class SynchronizationService {
                 .collect(Collectors.toMap(Product::getId, p -> p));
     }
 
-    private Map<Long, Product> getMapNonRemovedClientProductsPerId(@NonNull DataToSyncOnServer dataToSyncOnServer) {
+    private Map<Long, ProductClient> getMapNonRemovedClientProductsPerId(@NonNull DataToSyncOnServer dataToSyncOnServer) {
         return dataToSyncOnServer.getExistingProducts().stream()
                 .filter(p -> p.getId() != null)
-                .collect(Collectors.toMap(Product::getId, p -> p));
+                .collect(Collectors.toMap(ProductClient::getId, p -> p));
     }
 
     private Map<Long, Product> getMapNonRemovedServerProductsPerId() {
