@@ -70,7 +70,7 @@ public class AuthorizationResource {
             return getErrorRequest(errors);
         }
 
-        final User userToSave = new User(null, payload.get().getEmail(), null, WarehouseRole.EMPLOYEE);
+        final User userToSave = new User(payload.get().getEmail(), null, WarehouseRole.EMPLOYEE);
         final User savedUser = userRepository.save(userToSave);
 
         final String jwt = jwtService.createJwt(savedUser, clientFromRequest.get());
@@ -136,7 +136,7 @@ public class AuthorizationResource {
             return getErrorRequest(errors);
         }
 
-        final User userToSave = new User(null, credentials.get().getLogin(), passwordEncoder.encode(credentials.get().getPassword()), WarehouseRole.EMPLOYEE);
+        final User userToSave = new User(credentials.get().getLogin(), passwordEncoder.encode(credentials.get().getPassword()), WarehouseRole.EMPLOYEE);
         final User savedUser = userRepository.save(userToSave);
 
         final String token = createToken(new UserAndClientFromRequest(savedUser, clientFromRequest.get()));

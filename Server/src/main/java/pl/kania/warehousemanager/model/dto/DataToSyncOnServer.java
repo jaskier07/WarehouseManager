@@ -1,13 +1,15 @@
 package pl.kania.warehousemanager.model.dto;
 
-import lombok.Value;
+import lombok.Getter;
+import lombok.Setter;
 import pl.kania.warehousemanager.model.db.Product;
 
 import java.util.List;
 
-@Value
+@Getter
+@Setter
 public class DataToSyncOnServer {
-    // czy dodano nowych użytkowników? czy użytkownikowi zmieniła się rola?
+    // czy użytkownikowi zmieniła się rola?
     // POTRZEBNE: lista(id, rola, wektor modyfikacji)
 
     // czy dodano nowe produkty?
@@ -20,6 +22,6 @@ public class DataToSyncOnServer {
     // POTRZEBNE: lista(id, ilość, wektor) i merge na podstawie wektora
 
     // CZYLI: trzeba przesłać wszystkie produkty
-    private List<Long> userIds;
     private List<Product> products;
+    private List<Long> removedProductsIds;
 }

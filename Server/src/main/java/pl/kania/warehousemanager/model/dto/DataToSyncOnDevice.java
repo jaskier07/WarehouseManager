@@ -1,16 +1,16 @@
 package pl.kania.warehousemanager.model.dto;
 
-import lombok.Value;
+import lombok.Getter;
+import lombok.Setter;
 import pl.kania.warehousemanager.model.db.Product;
-import pl.kania.warehousemanager.model.db.User;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@Value
+@Getter
+@Setter
 public class DataToSyncOnDevice {
-    // nowi użytkownicy
-    // zmodyfikowani użytkownicy (role)
-
-    private List<User> newUsers;
-    private List<Product> products;
+    private List<Long> removedIds = new ArrayList<>();
+    private List<Product> newProducts = new ArrayList<>();
+    private List<Product> updatedProducts = new ArrayList<>();
 }

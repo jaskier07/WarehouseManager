@@ -14,6 +14,9 @@ import pl.kania.warehousemanager.services.dao.ClientDetailsRepository;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
 import pl.kania.warehousemanager.services.dao.UserRepository;
 
+import java.sql.Timestamp;
+import java.util.Date;
+
 @Component
 public class InitialDataLoader implements ApplicationRunner {
 
@@ -31,11 +34,14 @@ public class InitialDataLoader implements ApplicationRunner {
     @Autowired
     private ClientDetailsRepository clientRepository;
 
+//    @Autowired
+//    private VectorClockService vectorClockService;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         final User user = new User("user", passwordEncoder.encode(environment.getProperty("test.user.password")), WarehouseRole.EMPLOYEE);
         userRepository.save(user);
-        final User manager = new User("admin", passwordEncoder.encode(environment.getProperty("test.manager.password")), WarehouseRole.MANAGER);
+        final User manager = new User("A", passwordEncoder.encode(environment.getProperty("test.manager.password")), WarehouseRole.MANAGER);
         userRepository.save(manager);
 
         final ClientDetails oauthClientToken = new ClientDetails();
@@ -53,6 +59,8 @@ public class InitialDataLoader implements ApplicationRunner {
         samsung.setModelName("Galaxy s8");
         samsung.setPrice(19.90D);
         samsung.setQuantity(5);
+        samsung.setLastModified(Timestamp.from(new Date().toInstant()));
+//        samsung.setVectorClock(vectorClockService.createNewVector(5));
         productRepository.save(samsung);
 
         final Product iphone = new Product();
@@ -60,6 +68,9 @@ public class InitialDataLoader implements ApplicationRunner {
         iphone.setModelName("X");
         iphone.setQuantity(23);
         iphone.setPrice(9999.9D);
+        iphone.setLastModified(Timestamp.from(new Date().toInstant()));
+
+//        iphone.setVectorClock(vectorClockService.createNewVector(23));
         productRepository.save(iphone);
     }
 }
