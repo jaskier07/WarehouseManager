@@ -34,8 +34,8 @@ public class InitialDataLoader implements ApplicationRunner {
     @Autowired
     private ClientDetailsRepository clientRepository;
 
-//    @Autowired
-//    private VectorClockService vectorClockService;
+    @Autowired
+    private VectorProvider vectorProvider;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -58,15 +58,14 @@ public class InitialDataLoader implements ApplicationRunner {
         samsung.setManufacturerName("Samsung");
         samsung.setModelName("Galaxy s8");
         samsung.setPrice(19.90D);
-        samsung.setQuantity(5);
         samsung.setLastModified(Timestamp.from(new Date().toInstant()));
-//        samsung.setVectorClock(vectorClockService.createNewVector(5));
+        samsung.setVectorClock(vectorProvider.newVectorCreatedOnServer(5));
         productRepository.save(samsung);
 
         final Product iphone = new Product();
         iphone.setManufacturerName("Apple");
         iphone.setModelName("X");
-        iphone.setQuantity(23);
+        iphone.setVectorClock(vectorProvider.newVectorCreatedOnServer(23));
         iphone.setPrice(9999.9D);
         iphone.setLastModified(Timestamp.from(new Date().toInstant()));
 

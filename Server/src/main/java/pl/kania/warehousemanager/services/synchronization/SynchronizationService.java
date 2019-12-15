@@ -1,5 +1,6 @@
 package pl.kania.warehousemanager.services.synchronization;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.api.client.util.Lists;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -11,10 +12,10 @@ import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanager.model.dto.DataToSyncOnServer;
 import pl.kania.warehousemanager.model.dto.ProductClient;
+import pl.kania.warehousemanager.model.vector.ProductVectorClock;
+import pl.kania.warehousemanager.services.beans.VectorProvider;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
 
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +30,6 @@ import java.util.stream.Collectors;
 public class SynchronizationService {
 
     public static final int NO_GLOBAL_ID = -1;
-    public static final SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("hh:mm:ss dd-MM-yy");
 
     @Autowired
     private Environment environment;
@@ -37,7 +37,13 @@ public class SynchronizationService {
     @Autowired
     private ProductRepository productRepository;
 
-    public DataToSyncOnClient synchronizeWithDevice(@NonNull DataToSyncOnServer dataToSyncOnServer, @NonNull String clientId)  {
+    @Autowired
+    private ProductMerger productMerger;
+
+    @Autowired
+    private VectorProvider vectorProvider;
+
+    public DataToSyncOnClient synchronizeWithDevice(@NonNull DataToSyncOnServer dataToSyncOnServer, @NonNull String clientId) {
         log.info("----------- New request ------------ ");
         final DataToSyncOnClient dataToSyncOnClient = new DataToSyncOnClient();
 
@@ -52,10 +58,10 @@ public class SynchronizationService {
         log.info("Server removed products: " + serverRemovedProducts.keySet().toString());
         log.info("Client removed products: " + clientRemovedProducts.toString());
 
-        final Map<Long, Long> savedIdsPerLocalIds = saveNewProductsFromClientOnServer(dataToSyncOnServer.getNewProducts());
+        final Map<Long, Long> savedIdsPerLocalIds = saveNewProductsFromClientOnServer(dataToSyncOnServer.getNewProducts(), clientId);
         dataToSyncOnClient.getSavedProductIdPerLocalId().putAll(savedIdsPerLocalIds);
 
-        final List<ProductClient> newProductsOnClient = getNewProductsToSaveOnClient(serverProducts, clientProducts, clientRemovedProducts);
+        final List<ProductClient> newProductsOnClient = getNewProductsToSaveOnClient(serverProducts, clientProducts, clientRemovedProducts, clientId);
         dataToSyncOnClient.getNewProducts().addAll(newProductsOnClient);
         log.info("New products on client: " + newProductsOnClient.toString());
 
@@ -66,48 +72,14 @@ public class SynchronizationService {
         log.info("Products to remove on client: " + productIdsToRemove.toString());
 
         Set<Long> commonProductIds = getProductIdsOnBothServerAndClient(serverProducts, clientProducts);
-        final List<ProductClient> updatedProducts = mergeProducts(serverProducts, clientProducts, commonProductIds);
+        final List<ProductClient> updatedProducts = productMerger.mergeProducts(serverProducts, clientProducts, commonProductIds, clientId);
         dataToSyncOnClient.setUpdatedProducts(updatedProducts);
 
-//        // sync products
-//        for (Product clientProduct : dataToSyncOnServer.getProducts()) {
-//            final ProductVectorClock clientProductVector = clientProduct.getVectorClock();
-//            vectorClockService.getDifferentNodeNames(clientProductVector, serverProducts)
-//        }
-// TODO analogicznie zrobic na androidzie i przetestowac dodawanie i usuwanie
-
-         return dataToSyncOnClient;
+        return dataToSyncOnClient;
     }
 
-    private List<ProductClient> mergeProducts(Map<Long, Product> serverProducts, Map<Long, ProductClient> clientProducts, Set<Long> commonProductIds) {
-        final List<ProductClient> productsToUpdateOnClient = new ArrayList<>();
-        for (Long id : commonProductIds) {
-            final Product serverProduct = serverProducts.get(id);
-            final ProductClient clientProduct = clientProducts.get(id);
-            if (!serverProduct.getLastModified().equals(clientProduct.getLastModified())) {
-                try {
-                    if (serverProduct.getLastModified().before(clientProduct.getLastModified())) {
-                        // TODO zmiana quantiyt
-                        productRepository.save(ProductMapper.mapClientToServer(clientProduct));
-                        log.info("Server: updated product (id " + id + ") [server: " + formatTimestamp(serverProduct.getLastModified()) + "][client: " + formatTimestamp(clientProduct.getLastModified()) + "]");
-                    } else {
-                        final ProductClient updatedClientProduct = ProductMapper.mapServerToClient(serverProduct.clone());
-                        // TODO zmiana quantity
-                        updatedClientProduct.setLocalId(clientProduct.getLocalId());
-                        productsToUpdateOnClient.add(updatedClientProduct);
-                        log.info("Client: product to update (id " + id + ") [server: " + formatTimestamp(serverProduct.getLastModified()) + "][client: " + formatTimestamp(clientProduct.getLastModified()) + "]");
-                    }
-                } catch (Exception e) {
-                    log.error("An error occured while merging product (id " + id + ")", e);
-                }
-            }
-        }
-        return productsToUpdateOnClient;
-    }
 
-    private String formatTimestamp(Timestamp lastModified) {
-        return dateTimeFormatter.format(lastModified);
-    }
+
 
     private Set<Long> getProductIdsOnBothServerAndClient(Map<Long, Product> serverProducts, Map<Long, ProductClient> clientProducts) {
         Set<Long> ids = new HashSet<>();
@@ -142,26 +114,37 @@ public class SynchronizationService {
         }
     }
 
-    private List<ProductClient> getNewProductsToSaveOnClient(Map<Long, Product> serverProducts, Map<Long, ProductClient> clientProducts, List<Long> clientRemovedProducts) {
+    private List<ProductClient> getNewProductsToSaveOnClient(Map<Long, Product> serverProducts, Map<Long, ProductClient> clientProducts, List<Long> clientRemovedProducts, @NonNull String clientId) {
         final List<ProductClient> newProducts = new ArrayList<>();
         for (Long serverProductId : serverProducts.keySet()) {
             if (!clientProducts.containsKey(serverProductId) && !clientRemovedProducts.contains(serverProductId)) {
-                final Product product = serverProducts.get(serverProductId);
-//                product.getVectorClock().getNode(environment.getProperty("server.id")).incrementVersion();
-//                productRepository.save(product);
-                newProducts.add(ProductMapper.mapServerToClient(product));
+                try {
+                    // FIXME no need to update last product modification timestamp?
+                    final Product product = serverProducts.get(serverProductId);
+                    final ProductVectorClock vectorClock = product.getVectorClock();
+                    vectorClock.copyQuantity(vectorProvider.getServer(), clientId);
+                    product.setVectorClock(vectorClock);
+                    productRepository.save(product);
+                    newProducts.add(ProductMapper.mapServerToClient(product, clientId));
+                } catch (JsonProcessingException e) {
+                    log.error("An error with vector clock occurred while adding new products to save on client (id " + serverProductId + ")", e);
+                }
             }
         }
         return newProducts;
     }
 
-    private Map<Long, Long> saveNewProductsFromClientOnServer(List<ProductClient> newClientProducts) {
+    private Map<Long, Long> saveNewProductsFromClientOnServer(List<ProductClient> newClientProducts, @NonNull String clientId) {
         final Map<Long, Long> savedProductIdPerLocalId = new HashMap<>();
         for (ProductClient product : newClientProducts) {
-//            product.getVectorClock().getNode(environment.getProperty("server.id")).incrementVersion(); // TODO sprawdzic czy w bazie są zinkrementowane
-            final Product savedProduct = productRepository.save(ProductMapper.mapClientToServer(product));
-            savedProductIdPerLocalId.put(product.getLocalId(), savedProduct.getId());
-            log.info("Saved " + savedProduct.toString());
+            try {
+                final Product productToSave = ProductMapper.mapClientToServer(product, vectorProvider.newVector(clientId, product.getQuantity()));
+                final Product savedProduct = productRepository.save(productToSave);
+                savedProductIdPerLocalId.put(product.getLocalId(), savedProduct.getId());
+                log.info("Saved " + savedProduct.toString());
+            } catch (JsonProcessingException e) {
+                log.error("An error with vector clock occurred while saving new products on server (product id " + product.getId() + ")", e);
+            }
         }
         return savedProductIdPerLocalId;
     }

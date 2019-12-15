@@ -1,5 +1,7 @@
 package pl.kania.warehousemanager.services.resources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.ChangeQuantityResult;
+import pl.kania.warehousemanager.services.beans.VectorProvider;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
 import pl.kania.warehousemanager.services.security.JWTService;
 
@@ -23,6 +26,7 @@ import javax.ws.rs.QueryParam;
 import java.net.URI;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 public class ProductResource {
 
@@ -31,6 +35,9 @@ public class ProductResource {
 
     @Autowired
     private ProductRepository productDao;
+
+    @Autowired
+    private VectorProvider vectorProvider;
 
     @GetMapping("/products")
     public ResponseEntity<Iterable<Product>> getAllProducts(@RequestHeader("Authorization") String header) {
@@ -60,11 +67,20 @@ public class ProductResource {
         if (product == null) {
             return getError();
         }
+        final Optional<String> clientId = jwtService.getClientId(header);
+        if (!clientId.isPresent()) {
+            return getError();
+        }
 
-        product.setQuantity(0);
-        product = productDao.save(product);
-        URI uri = UriComponentsBuilder.fromUriString("/product/" + product.getId()).build().toUri();
-        return ResponseEntity.created(uri).build();
+        try {
+            product.setVectorClock(vectorProvider.newVector(clientId.get(), 0));
+            product = productDao.save(product);
+            URI uri = UriComponentsBuilder.fromUriString("/product/" + product.getId()).build().toUri();
+            return ResponseEntity.created(uri).build();
+        } catch (JsonProcessingException e) {
+            log.error("Error with vector clock while adding new product", e);
+            return getError();
+        }
     }
 
     @PutMapping("/product/{productId}/update")

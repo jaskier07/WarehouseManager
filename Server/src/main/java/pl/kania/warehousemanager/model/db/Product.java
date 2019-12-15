@@ -1,18 +1,24 @@
 package pl.kania.warehousemanager.model.db;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
+import pl.kania.warehousemanager.model.vector.ProductVectorClock;
+import pl.kania.warehousemanager.model.vector.ProductVectorClockNode;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Setter
 @Getter
-public class Product implements Cloneable{
+public class Product implements Cloneable {
 
     @Id
     @GeneratedValue
@@ -26,9 +32,6 @@ public class Product implements Cloneable{
 
     @Column(name = "PRICE")
     private Double price;
-
-    @Column(name = "QUANTITY")
-    private Integer quantity = 0;
 
     @Column(name = "VECTOR_CLOCK")
     private String vectorClock;
@@ -47,24 +50,25 @@ public class Product implements Cloneable{
 
     @Override
     public Product clone() throws CloneNotSupportedException {
-        Product copy = (Product)super.clone();
+        Product copy = (Product) super.clone();
         copy.id = getId();
         copy.removed = isRemoved();
         copy.lastModified = getLastModified();
         copy.manufacturerName = getManufacturerName();
         copy.modelName = getModelName();
         copy.price = getPrice();
-        copy.quantity = getQuantity();
         return copy;
     }
 
-    //    public void setVectorClock(ProductVectorClock clock) throws JsonProcessingException {
-//        this.vectorClock = clock.toJson();
-//    }
-//
-//    public ProductVectorClock getVectorClock() throws JsonProcessingException {
-//        return new ObjectMapper().readValue(vectorClock, ProductVectorClock.class);
-//    }
+    public void setVectorClock(ProductVectorClock clock) throws JsonProcessingException {
+        this.vectorClock = new ObjectMapper().writeValueAsString(clock.getNodes());
+        new ObjectMapper().readValue(vectorClock, ProductVectorClockNode[].class);
+    }
+
+    public ProductVectorClock getVectorClock() throws JsonProcessingException {
+        final List<ProductVectorClockNode> list = new ObjectMapper().readValue(vectorClock, new TypeReference<List<ProductVectorClockNode>>(){});
+        return new ProductVectorClock(list);
+    }
 
     @Override
     public String toString() {
