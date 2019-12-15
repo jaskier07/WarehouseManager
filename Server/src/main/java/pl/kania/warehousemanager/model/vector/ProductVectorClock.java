@@ -17,5 +17,10 @@ public class ProductVectorClock {
     public void copyQuantity(String from, String to) {
         getNode(to).setQuantity(getNode(from).getQuantity());
     }
+
+    @Override
+    public String toString() {
+        return "ProductVectorClock: " + nodes.toString();
+    }
 }
 

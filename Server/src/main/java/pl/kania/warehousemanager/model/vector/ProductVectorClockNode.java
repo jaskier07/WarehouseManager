@@ -20,4 +20,9 @@ public class ProductVectorClockNode {
     public ProductVectorClockNode(@NonNull String nodeName) {
         this.nodeName = nodeName;
     }
+
+    @Override
+    public String toString() {
+        return "{" + nodeName + ", " + quantity + "}";
+    }
 }

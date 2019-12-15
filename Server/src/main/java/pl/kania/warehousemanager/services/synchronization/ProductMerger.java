@@ -37,6 +37,7 @@ public class ProductMerger {
             if (!serverProduct.getLastModified().equals(clientProduct.getLastModified())) {
                 try {
                     ProductVectorClock vector = quantityConflictResolver.getProductVectorClock(serverProduct.getVectorClock(), clientProduct.getQuantity(), clientId);
+                    log.info("New vector clock for product (id " + id + ") " + vector.toString());
                     try {
                         if (serverProduct.getLastModified().before(clientProduct.getLastModified())) {
                             overwriteServerProduct(id, serverProduct, clientProduct, vector);
