@@ -79,22 +79,24 @@ public class ProductAdapter extends ArrayAdapter<ProductClient> {
         Button delete = convertView.findViewById(R.id.buttonDelete);
         delete.setOnClickListener(c -> deleteProduct(TextParser.parseLong(idValue)));
         Button increase = convertView.findViewById(R.id.buttonIncrease);
-        increase.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue), getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)));
+        increase.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue),
+                TextParser.parseInt(quantityValue), getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)));
                 Button decrease = convertView.findViewById(R.id.buttonDecrease);
-        decrease.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue), getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber) * -1));
+        decrease.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue),
+                TextParser.parseInt(quantityValue),getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber) * -1));
 
         return convertView;
     }
 
-    private void changeQuantity(Long id, Integer value) {
-//        new RestService(sharedPreferences).decreaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
-//                getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter, this::showInfo);
-        //   new RestService(sharedPreferences).increaseProductQuantity(new ProductQuantity(TextParser.parseLong(idValue),
-        //           getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)), this::updateArrayAdapter));
+    private void changeQuantity(Long id, int currentQuantity, Integer value) {
         if (value != NO_CHANGE_IN_QUANTITY) {
-            boolean updated = db.updateQuantityProductValue(id, value, IdType.LOCAL, true);
-            if (updated) {
-                updateArrayAdapter();
+            if (currentQuantity + value < 0) {
+                showInfo("Product quantity cannot be lower than 0!");
+            } else {
+                boolean updated = db.updateQuantityProductValue(id, value, IdType.LOCAL, true);
+                if (updated) {
+                    updateArrayAdapter();
+                }
             }
         }
     }
@@ -117,14 +119,8 @@ public class ProductAdapter extends ArrayAdapter<ProductClient> {
     private void showInfoInvalidNumber() {
         Toast.makeText(activity.getApplicationContext(), "Enter valid number (> 0)", Toast.LENGTH_LONG).show();
     }
-
-    private void showInfoNoPermission() {
-        activity.runOnUiThread(() -> Toast.makeText(activity.getApplicationContext(), "You do not have permission to delete product", Toast.LENGTH_LONG).show());
-    }
-
     private void updateArrayAdapter() {
-        updateList(activity).accept(db.selectAllNonRemovedProductsWithGlobalId());
-//        new RestService(sharedPreferences).getAllProducts(prod -> updateList(activity).accept(prod));
+        updateList(activity).accept(db.selectAllNonRemovedProducts());
     }
 
     private String getNullSafeNumberValue(Number number) {
