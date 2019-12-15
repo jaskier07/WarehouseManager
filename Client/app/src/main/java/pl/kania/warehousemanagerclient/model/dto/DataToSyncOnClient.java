@@ -7,13 +7,13 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 
 @Getter
 @Setter
 public class DataToSyncOnClient {
     private List<Long> removedIds = new ArrayList<>();
-    private List<Product> newProducts = new ArrayList<>();
-    private List<Product> updatedProducts = new ArrayList<>();
+    private List<ProductClient> newProducts = new ArrayList<>();
+    private List<ProductClient> updatedProducts = new ArrayList<>();
     private Map<Long, Long> savedProductIdPerLocalId = new HashMap<>();
 }

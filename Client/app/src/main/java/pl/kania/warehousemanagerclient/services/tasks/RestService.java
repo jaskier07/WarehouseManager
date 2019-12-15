@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnServer;
 import pl.kania.warehousemanagerclient.model.dto.ProductQuantity;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
 import pl.kania.warehousemanagerclient.model.login.LoginResult;
 import pl.kania.warehousemanagerclient.model.login.UserCredentials;
@@ -31,11 +31,11 @@ public class RestService {
         new TaskSynchronize(getToken(), context, afterSync).execute(dataToSyncOnServer);
     }
 
-    public void getAllProducts(Consumer<List<Product>> updateProducts) {
+    public void getAllProducts(Consumer<List<ProductClient>> updateProducts) {
         new TaskGetAllProducts(getToken(), updateProducts, context).execute();
     }
 
-    public void addNewProduct(Product product, Runnable afterAdd) {
+    public void addNewProduct(ProductClient product, Runnable afterAdd) {
         new TaskAddProduct(getToken(), afterAdd, context).execute(product);
     }
 
@@ -51,7 +51,7 @@ public class RestService {
         new TaskIncreaseProductQuantity(getToken(), afterIncrease, context).execute(productQuantity);
     }
 
-    public void updateProduct(Product product, Runnable afterUpdate) {
+    public void updateProduct(ProductClient product, Runnable afterUpdate) {
         new TaskUpdateProduct(getToken(), afterUpdate, context).execute(product);
     }
 

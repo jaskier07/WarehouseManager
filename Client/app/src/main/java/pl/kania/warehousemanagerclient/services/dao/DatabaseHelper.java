@@ -4,7 +4,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -17,8 +17,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(Product.ProductDll.DROP_TABLE);
-        db.execSQL(Product.ProductDll.CREATE_TABLE);
+        db.execSQL(ProductClient.ProductDll.DROP_TABLE);
+        db.execSQL(ProductClient.ProductDll.CREATE_TABLE);
     }
 
     @Override

@@ -10,26 +10,25 @@ import java.util.function.Consumer;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 
 
+class TaskGetAllProducts extends AbstractRestTask<Void, List<ProductClient>> {
+    private final Consumer<List<ProductClient>> updateProducts;
 
-class TaskGetAllProducts extends AbstractRestTask<Void, List<Product>> {
-    private final Consumer<List<Product>> updateProducts;
-
-    TaskGetAllProducts(String token, Consumer<List<Product>> updateProducts, Context context) {
+    TaskGetAllProducts(String token, Consumer<List<ProductClient>> updateProducts, Context context) {
         super(token, context);
         this.updateProducts = updateProducts;
     }
 
     @Override
-    protected List<Product> doInBackground(Void... voids) {
+    protected List<ProductClient> doInBackground(Void... voids) {
         try {
             final Response response = executeRequest(getRequest());
             final ResponseBody responseBody = response.body();
 
             if (response.isSuccessful() && responseBody != null) {
-                return Arrays.asList(getObjectMapper().readValue(responseBody.string(), Product[].class));
+                return Arrays.asList(getObjectMapper().readValue(responseBody.string(), ProductClient[].class));
             } else {
                 Log.w("getAllProducts", "Error code != 200 or empty response body");
             }
@@ -47,7 +46,7 @@ class TaskGetAllProducts extends AbstractRestTask<Void, List<Product>> {
     }
 
     @Override
-    protected void onPostExecute(List<Product> products) {
+    protected void onPostExecute(List<ProductClient> products) {
         updateProducts.accept(products);
     }
 }

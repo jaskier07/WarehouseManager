@@ -4,12 +4,12 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 
 @Getter
 @Setter
 public class DataToSyncOnServer {
-    private List<Product> newProducts;
-    private List<Product> existingProducts;
+    private List<ProductClient> newProducts;
+    private List<ProductClient> existingProducts;
     private List<Long> removedProductsIds;
 }

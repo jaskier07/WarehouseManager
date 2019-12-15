@@ -11,21 +11,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import static android.provider.BaseColumns._ID;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.LAST_MODIFIED;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.LOCAL_ID;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.MANUFACTURER_NAME;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.MODEL_NAME;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.PRICE;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.PRODUCT_TABLE_NAME;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.QUANTITY;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.REMOVED;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.LAST_MODIFIED;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.LOCAL_ID;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.MANUFACTURER_NAME;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.MODEL_NAME;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.PRICE;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.PRODUCT_TABLE_NAME;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.QUANTITY;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.REMOVED;
 
 @Builder
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Product {
+public class ProductClient {
 
     private Long id;
     private String manufacturerName;
@@ -78,10 +78,10 @@ public class Product {
 
     @Override
     public String toString() {
-        return "Product: " + getManufacturerName() + " " + getModelName() + " (id " + getId() + ") (local id " + getLocalId() + ")";
+        return "ProductClient: " + getManufacturerName() + " " + getModelName() + " (id " + getId() + ") (local id " + getLocalId() + ")";
     }
 
-    public String getChangedInfo(Product original) {
+    public String getChangedInfo(ProductClient original) {
         final StringBuilder sb = new StringBuilder();
         if (!original.getManufacturerName().equals(getManufacturerName())) {
             sb.append("Change in manufacturer name (" + original.getManufacturerName() + " -> " + getManufacturerName() + ")");

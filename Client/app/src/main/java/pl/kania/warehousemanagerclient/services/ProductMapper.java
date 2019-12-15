@@ -7,20 +7,20 @@ import java.sql.Timestamp;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 
 import static android.provider.BaseColumns._ID;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.LAST_MODIFIED;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.MANUFACTURER_NAME;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.MODEL_NAME;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.PRICE;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.QUANTITY;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.REMOVED;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.LAST_MODIFIED;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.MANUFACTURER_NAME;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.MODEL_NAME;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.PRICE;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.QUANTITY;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.REMOVED;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ProductMapper {
 
-    public static ContentValues mapProductToContentValues(Product product, boolean mapQuantity) {
+    public static ContentValues mapProductToContentValues(ProductClient product, boolean mapQuantity) {
         final ContentValues cv = new ContentValues();
         cv.put(MANUFACTURER_NAME, product.getManufacturerName());
         cv.put(MODEL_NAME, product.getModelName());
@@ -34,7 +34,7 @@ public class ProductMapper {
         return cv;
     }
 
-    public static ContentValues mapNewProductToContentValues(Product product) {
+    public static ContentValues mapNewProductToContentValues(ProductClient product) {
         final ContentValues cv = new ContentValues();
         cv.put(_ID, -1);
         cv.put(MANUFACTURER_NAME, product.getManufacturerName());
@@ -46,8 +46,8 @@ public class ProductMapper {
         return cv;
     }
 
-    public static Product mapCursorToProduct(Cursor cursor) {
-        Product product = new Product();
+    public static ProductClient mapCursorToProduct(Cursor cursor) {
+        ProductClient product = new ProductClient();
         product.setId(cursor.getLong(0));
         product.setManufacturerName(cursor.getString(1));
         product.setModelName(cursor.getString(2));

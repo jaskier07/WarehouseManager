@@ -2,12 +2,12 @@ package pl.kania.warehousemanagerclient.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 
 @AllArgsConstructor
 @Getter
 public enum IdType {
-    GLOBAL(Product.ProductEntry._ID),
-    LOCAL(Product.ProductEntry.LOCAL_ID);
+    GLOBAL(ProductClient.ProductEntry._ID),
+    LOCAL(ProductClient.ProductEntry.LOCAL_ID);
     private String dbKey;
 }

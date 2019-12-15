@@ -8,11 +8,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 
 
-
-class TaskAddProduct extends AbstractRestTask<Product, Void> {
+class TaskAddProduct extends AbstractRestTask<ProductClient, Void> {
 
     private final Runnable afterAdd;
 
@@ -22,7 +21,7 @@ class TaskAddProduct extends AbstractRestTask<Product, Void> {
     }
 
     @Override
-    protected Void doInBackground(Product... products) {
+    protected Void doInBackground(ProductClient... products) {
         if (products.length > 0) {
             try {
                 final Response response = executeRequest(getRequest(products[0]));
@@ -38,7 +37,7 @@ class TaskAddProduct extends AbstractRestTask<Product, Void> {
         return null;
     }
 
-    private Request getRequest(Product product) throws JsonProcessingException {
+    private Request getRequest(ProductClient product) throws JsonProcessingException {
         final RequestBody requestBody = RequestBody.create(getMediaType(), getObjectMapper().writeValueAsString(product));
         return new Request.Builder()
                 .url(getBaseProductUri())

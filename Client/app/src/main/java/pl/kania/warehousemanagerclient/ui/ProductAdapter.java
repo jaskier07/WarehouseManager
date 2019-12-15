@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 
 import pl.kania.warehousemanagerclient.R;
 import pl.kania.warehousemanagerclient.model.IdType;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
@@ -29,7 +29,7 @@ import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_
 import static pl.kania.warehousemanagerclient.utils.TextParser.getValidDoubleValue;
 import static pl.kania.warehousemanagerclient.utils.TextParser.getValidIntegerValue;
 
-public class ProductAdapter extends ArrayAdapter<Product> {
+public class ProductAdapter extends ArrayAdapter<ProductClient> {
 
     private static final int NO_CHANGE_IN_QUANTITY = 0;
     private final Activity activity;
@@ -48,7 +48,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.product_list_element_fragment, parent, false);
         }
-        Product product = getItem(position);
+        ProductClient product = getItem(position);
         sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
         EditText manufacturerValue = convertView.findViewById(R.id.manufacturerValue);
@@ -66,7 +66,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
 
         Button update = convertView.findViewById(R.id.buttonUpdate);
         update.setOnClickListener(c -> //new RestService(sharedPreferences).updateProduct(
-                db.updateNonQuantityProductValues(Product.builder()
+                db.updateNonQuantityProductValues(ProductClient.builder()
                         .id(product.getId())
                         .manufacturerName(TextParser.getText(manufacturerValue))
                         .modelName(TextParser.getText(modelValue))
@@ -81,7 +81,7 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         Button increase = convertView.findViewById(R.id.buttonIncrease);
         increase.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue), getValidIntegerValue(increaseBy, this::showInfoInvalidNumber)));
                 Button decrease = convertView.findViewById(R.id.buttonDecrease);
-        decrease.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue), getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber)));
+        decrease.setOnClickListener(c -> changeQuantity(TextParser.parseLong(idValue), getValidIntegerValue(decreaseBy, this::showInfoInvalidNumber) * -1));
 
         return convertView;
     }
@@ -134,13 +134,13 @@ public class ProductAdapter extends ArrayAdapter<Product> {
         return number.toString();
     }
 
-    public Consumer<List<Product>> updateList(Activity activity) {
+    public Consumer<List<ProductClient>> updateList(Activity activity) {
         return r -> activity.runOnUiThread(() -> {
             if (r != null) {
                 clear();
                 addAll(r);
                 notifyDataSetChanged();
-                Toast.makeText(getContext(), "Product list has been updated", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "ProductClient list has been updated", Toast.LENGTH_LONG).show();
             }
         });
     }

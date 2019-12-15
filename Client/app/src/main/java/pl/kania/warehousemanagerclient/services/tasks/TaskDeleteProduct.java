@@ -31,7 +31,7 @@ class TaskDeleteProduct extends AbstractRestTask<Long, Void> {
                     onSuccess.run();
                 } else {
                     onFailure.run();
-                    Log.w("delete", "Product deletion did not complete successfully");
+                    Log.w("delete", "ProductClient deletion did not complete successfully");
                 }
             } catch (Exception e) {
                 Log.e("delete", "An error occured while deleting product");

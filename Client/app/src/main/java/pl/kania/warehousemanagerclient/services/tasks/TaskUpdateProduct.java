@@ -8,9 +8,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 
-class TaskUpdateProduct extends AbstractRestTask<Product, Void> {
+class TaskUpdateProduct extends AbstractRestTask<ProductClient, Void> {
 
     private final Runnable afterUpdate;
 
@@ -20,9 +20,9 @@ class TaskUpdateProduct extends AbstractRestTask<Product, Void> {
     }
 
     @Override
-    protected Void doInBackground(Product... products) {
+    protected Void doInBackground(ProductClient... products) {
         try {
-            final Product product = products[0];
+            final ProductClient product = products[0];
             final Response response = executeRequest(getRequest(product));
             if (response.isSuccessful()) {
                 afterUpdate.run();
@@ -35,7 +35,7 @@ class TaskUpdateProduct extends AbstractRestTask<Product, Void> {
         return null;
     }
 
-    private Request getRequest(Product product) throws JsonProcessingException {
+    private Request getRequest(ProductClient product) throws JsonProcessingException {
         final RequestBody requestBody = RequestBody.create(getMediaType(), getObjectMapper().writeValueAsString(product));
         return new Request.Builder()
                 .addHeader(AUTH_HEADER, getAuthValue())

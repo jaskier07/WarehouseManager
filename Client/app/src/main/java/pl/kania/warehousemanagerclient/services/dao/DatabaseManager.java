@@ -14,12 +14,12 @@ import java.util.List;
 import java.util.Optional;
 
 import pl.kania.warehousemanagerclient.model.IdType;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 import pl.kania.warehousemanagerclient.services.ProductMapper;
 
 import static android.provider.BaseColumns._ID;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.PRODUCT_TABLE_NAME;
-import static pl.kania.warehousemanagerclient.model.entities.Product.ProductEntry.REMOVED;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.PRODUCT_TABLE_NAME;
+import static pl.kania.warehousemanagerclient.model.entities.ProductClient.ProductEntry.REMOVED;
 
 public class DatabaseManager {
 
@@ -45,9 +45,9 @@ public class DatabaseManager {
     }
 
 
-    public boolean insertAllProducts(List<Product> products, boolean hasGlobalId, boolean updateLastModified) {
+    public boolean insertAllProducts(List<ProductClient> products, boolean hasGlobalId, boolean updateLastModified) {
         boolean allInserted = true;
-        for (Product product : products) {
+        for (ProductClient product : products) {
             if (insertProduct(product, hasGlobalId, updateLastModified) == ERROR) {
                 allInserted = false;
             }
@@ -55,7 +55,7 @@ public class DatabaseManager {
         return allInserted;
     }
 
-    public Long insertProduct(Product product, boolean hasGlobalId, boolean updateLastModified) {
+    public Long insertProduct(ProductClient product, boolean hasGlobalId, boolean updateLastModified) {
         if (updateLastModified) {
             updateProductLastModified(product);
         }
@@ -70,9 +70,9 @@ public class DatabaseManager {
         return id;
     }
 
-    public List<Product> selectAllNonRemovedNewProducts() {
+    public List<ProductClient> selectAllNonRemovedNewProducts() {
         open();
-        final List<Product> products = new ArrayList<>();
+        final List<ProductClient> products = new ArrayList<>();
         final Cursor cursor = db.rawQuery("SELECT * FROM " + PRODUCT_TABLE_NAME +" WHERE " + REMOVED + " = 0 AND " + _ID + " = -1", null);
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
@@ -84,9 +84,9 @@ public class DatabaseManager {
         return products;
     }
 
-    public List<Product> selectAllNonRemovedProducts() {
+    public List<ProductClient> selectAllNonRemovedProducts() {
         open();
-        final List<Product> products = new ArrayList<>();
+        final List<ProductClient> products = new ArrayList<>();
         final Cursor cursor = db.rawQuery("SELECT * FROM " + PRODUCT_TABLE_NAME +" WHERE " + REMOVED + " = 0", null);
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
@@ -98,9 +98,9 @@ public class DatabaseManager {
         return products;
     }
 
-    public List<Product> selectAllNonRemovedProductsWithGlobalId() {
+    public List<ProductClient> selectAllNonRemovedProductsWithGlobalId() {
         open();
-        final List<Product> products = new ArrayList<>();
+        final List<ProductClient> products = new ArrayList<>();
         final Cursor cursor = db.rawQuery("SELECT * FROM " + PRODUCT_TABLE_NAME +" WHERE " + REMOVED + " = 0 AND " + _ID + " != -1", null);
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
@@ -126,7 +126,7 @@ public class DatabaseManager {
         return ids;
     }
 
-    public Optional<Product> selectProduct(Long id, IdType idType) {
+    public Optional<ProductClient> selectProduct(Long id, IdType idType) {
         open();
         final Cursor cursor = db.rawQuery("SELECT * FROM " + PRODUCT_TABLE_NAME + " WHERE " + idType.getDbKey() + " = " + id, null);
         if (cursor.moveToFirst()) {
@@ -140,7 +140,7 @@ public class DatabaseManager {
     }
 
     public boolean deleteProduct(Long productId, IdType idType) {
-        final Optional<Product> product = selectProduct(productId, idType);
+        final Optional<ProductClient> product = selectProduct(productId, idType);
         if (product.isPresent()) {
             // TODO permission check
             product.get().setRemoved(true);
@@ -152,7 +152,7 @@ public class DatabaseManager {
         }
     }
 
-    public boolean updateNonQuantityProductValues(Product product, IdType idType, boolean updateLastModified) {
+    public boolean updateNonQuantityProductValues(ProductClient product, IdType idType, boolean updateLastModified) {
         if (updateLastModified) {
             updateProductLastModified(product);
         }
@@ -169,25 +169,26 @@ public class DatabaseManager {
     }
 
     public boolean updateQuantityProductValue(Long id, int change, IdType idType, boolean updateLastModified) {
+        final Optional<ProductClient> product = selectProduct(id, idType);
         open();
-        final Optional<Product> product = selectProduct(id, idType);
         if (product.isPresent()) {
             if (updateLastModified) {
                 updateProductLastModified(product.get());
             }
             product.get().setQuantity(product.get().getQuantity() + change);
-            int rowsUpdated = db.update(PRODUCT_TABLE_NAME, ProductMapper.mapProductToContentValues(product.get(), true), "WHERE " + _ID + " = " + id, null);
+            final ContentValues cv = ProductMapper.mapProductToContentValues(product.get(), true);
+            int rowsUpdated = db.update(PRODUCT_TABLE_NAME, cv, idType.getDbKey() + "=" + id, null);
             return rowsUpdated > 0;
         }
         close();
         return false;
     }
 
-    private void updateProductLastModified(Product product) {
+    private void updateProductLastModified(ProductClient product) {
         product.setLastModified(new Timestamp(new Date().getTime()));
     }
 
-//    private void updateProductVectorClock(Product product) {
+//    private void updateProductVectorClock(ProductClient product) {
 //        try {
 //            ProductVectorClock vectorClock = product.getVectorClock();
 //            if (vectorClock == null) {

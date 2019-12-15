@@ -10,7 +10,7 @@ import java.util.Optional;
 import pl.kania.warehousemanagerclient.model.IdType;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnServer;
-import pl.kania.warehousemanagerclient.model.entities.Product;
+import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 
 public class SynchronizationService {
@@ -27,10 +27,10 @@ public class SynchronizationService {
     public DataToSyncOnServer getDataToSynchronizeOnServer() {
         final DataToSyncOnServer dataToSyncOnServer = new DataToSyncOnServer();
 
-        final List<Product> newProducts = db.selectAllNonRemovedNewProducts();
+        final List<ProductClient> newProducts = db.selectAllNonRemovedNewProducts();
         dataToSyncOnServer.setNewProducts(newProducts);
 
-        final List<Product> existingProducts = db.selectAllNonRemovedProductsWithGlobalId();
+        final List<ProductClient> existingProducts = db.selectAllNonRemovedProductsWithGlobalId();
         dataToSyncOnServer.setExistingProducts(existingProducts);
 
         final List<Long> removedProductIds = db.selectRemovedProductGlobalIds();
@@ -44,19 +44,19 @@ public class SynchronizationService {
         addNewProducts(dataToSyncOnClient.getNewProducts(), messages);
         removeProducts(dataToSyncOnClient.getRemovedIds(), messages);
         updateSavedProducts(dataToSyncOnClient.getSavedProductIdPerLocalId(), messages);
-        updateProducts(dataToSyncOnClient.getUpdatedProducts(), messages);
+        updateExistingProducts(dataToSyncOnClient.getUpdatedProducts(), messages);
         // TODO update quantity
 
         return messages;
     }
 
-    private void updateProducts(List<Product> updatedProducts, List<String> messages) {
-        for (Product product : updatedProducts) {
-            Product productFromDb = db.selectProduct(product.getId(), IdType.GLOBAL).get();
+    private void updateExistingProducts(List<ProductClient> updatedProducts, List<String> messages) {
+        for (ProductClient product : updatedProducts) {
+            ProductClient productFromDb = db.selectProduct(product.getId(), IdType.GLOBAL).get();
 
             boolean result = db.updateNonQuantityProductValues(product, IdType.GLOBAL, false);
             if (result) {
-                messages.add("Product has been merged with server (id " + product.getId() + "): " + product.getChangedInfo(productFromDb));
+                messages.add("ProductClient has been merged with server (id " + product.getId() + "): " + product.getChangedInfo(productFromDb));
             } else {
                 messages.add(ERROR_PREFIX + "An error occured while merging product with server (id " + product.getId() + ")");
             }
@@ -65,11 +65,11 @@ public class SynchronizationService {
 
     private void updateSavedProducts(Map<Long, Long> savedProductIdPerLocalId, List<String> messages) {
         for (Map.Entry<Long, Long> productIdPerLocalId : savedProductIdPerLocalId.entrySet()) {
-            final Optional<Product> product = db.selectProduct(productIdPerLocalId.getKey(), IdType.LOCAL);
+            final Optional<ProductClient> product = db.selectProduct(productIdPerLocalId.getKey(), IdType.LOCAL);
             if (product.isPresent()) {
                 product.get().setId(productIdPerLocalId.getValue());
                 db.updateNonQuantityProductValues(product.get(), IdType.LOCAL, false);
-                messages.add("Product global id updated: " + product.toString());
+                messages.add("ProductClient global id updated: " + product.toString());
             } else {
                 messages.add("Cannot set product global id (" + productIdPerLocalId.getValue() + ") because product with id (" + productIdPerLocalId.getKey() + " does not exist");
             }
@@ -78,22 +78,22 @@ public class SynchronizationService {
 
     private void removeProducts(List<Long> removedIds, List<String> messages) {
         for (Long id : removedIds) {
-            final Optional<Product> product = db.selectProduct(id, IdType.GLOBAL);
+            final Optional<ProductClient> product = db.selectProduct(id, IdType.GLOBAL);
             if (product.isPresent()) {
                 final boolean result = db.deleteProduct(id, IdType.GLOBAL);
                 if (result) {
-                    messages.add("Product (id " + id + ") has been removed.");
+                    messages.add("ProductClient (id " + id + ") has been removed.");
                 } else {
                     messages.add(ERROR_PREFIX + "Cannot remove product (id " + id + ").");
                 }
             } else {
-                Log.w("removing product", "Product not found (globalId = " + id);
-                messages.add(ERROR_PREFIX + "Cannot remove product (id " + id + "). Product not found.");
+                Log.w("removing product", "ProductClient not found (globalId = " + id);
+                messages.add(ERROR_PREFIX + "Cannot remove product (id " + id + "). ProductClient not found.");
             }
         }
     }
 
-    private void addNewProducts(List<Product> newProducts, List<String> messages) {
+    private void addNewProducts(List<ProductClient> newProducts, List<String> messages) {
         if (!newProducts.isEmpty()) {
             try {
                 boolean result = db.insertAllProducts(newProducts, true, false);
