@@ -74,7 +74,7 @@ public class AuthorizationResource {
         final User savedUser = userRepository.save(userToSave);
 
         final String jwt = jwtService.createJwt(savedUser, clientFromRequest.get());
-        return ResponseEntity.ok(new LoginResult(jwt, savedUser.getLogin()));
+        return ResponseEntity.ok(new LoginResult(jwt, savedUser.getLogin(), savedUser.isManager()));
     }
 
     @PostMapping(value = "/log-in-with-google")
@@ -103,7 +103,7 @@ public class AuthorizationResource {
 
         final String jwt = jwtService.createJwt(user, clientFromRequest.get());
 
-        return ResponseEntity.ok(new LoginResult(jwt, user.getLogin()));
+        return ResponseEntity.ok(new LoginResult(jwt, user.getLogin(), user.isManager()));
     }
 
     @PostMapping(value = "/log-in")
@@ -115,7 +115,7 @@ public class AuthorizationResource {
         }
 
         final String token = createToken(userFromClient.get());
-        return ResponseEntity.ok(new LoginResult(token, userFromClient.get().getUser().getLogin()));
+        return ResponseEntity.ok(new LoginResult(token, userFromClient.get().getUser().getLogin(), userFromClient.get().getUser().isManager()));
     }
 
     @PostMapping(value = "/sign-in")
@@ -140,7 +140,7 @@ public class AuthorizationResource {
         final User savedUser = userRepository.save(userToSave);
 
         final String token = createToken(new UserAndClientFromRequest(savedUser, clientFromRequest.get()));
-        return ResponseEntity.ok(new LoginResult(token, savedUser.getLogin()));
+        return ResponseEntity.ok(new LoginResult(token, savedUser.getLogin(), savedUser.isManager()));
     }
 
     private String createToken(UserAndClientFromRequest userFromClient) {

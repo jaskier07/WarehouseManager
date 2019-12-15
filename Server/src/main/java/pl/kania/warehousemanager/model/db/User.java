@@ -35,4 +35,8 @@ public class User {
         this.password = password;
         this.role = role;
     }
+
+    public boolean isManager() {
+        return role.equals(WarehouseRole.MANAGER);
+    }
 }

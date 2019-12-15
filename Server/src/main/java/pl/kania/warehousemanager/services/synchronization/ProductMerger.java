@@ -8,6 +8,7 @@ import pl.kania.warehousemanager.model.ProductMapper;
 import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.ProductClient;
 import pl.kania.warehousemanager.model.vector.ProductVectorClock;
+import pl.kania.warehousemanager.model.vector.ProductVectorClockNode;
 import pl.kania.warehousemanager.services.beans.VectorProvider;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
 
@@ -39,12 +40,14 @@ public class ProductMerger {
             final Product serverProduct = serverProducts.get(id);
             final ProductClient clientProduct = clientProducts.get(id);
             try {
-                final ProductVectorClock vector = quantityConflictResolver.getProductVectorClock(serverProduct.getVectorClock(), clientProduct.getQuantity(), clientId);
                 if (!serverProduct.getLastModified().equals(clientProduct.getLastModified())) {
+                    final ProductVectorClock vector = quantityConflictResolver.getProductVectorClock(serverProduct.getVectorClock(), clientProduct.getQuantity(), clientId);
                     log.info("New vector clock for product (id " + id + ") " + vector.toString());
                     try {
                         if (serverProduct.getLastModified().before(clientProduct.getLastModified())) {
                             overwriteServerProduct(id, serverProduct, clientProduct, vector);
+                            clientProduct.setQuantity(vector.getNode(clientId).getQuantity());
+                            productsToUpdateOnClient.add(clientProduct);
                         } else {
                             serverProduct.setVectorClock(vector);
                             final ProductClient overwrittenProduct = overwriteClientProduct(id, serverProduct, clientProduct, clientId);
@@ -54,8 +57,11 @@ public class ProductMerger {
                     } catch (Exception e) {
                         log.error("An error occurred while merging product (id " + id + ")", e);
                     }
-                } else if (!clientProduct.getQuantity().equals(vector.getNode(vectorProvider.getServer()).getQuantity())) {
-                    overrideClientQuantityWhenLastModifiedDateEqual(clientId, productsToUpdateOnClient, id, serverProduct, clientProduct, vector);
+                } else {
+                    final ProductVectorClockNode serverNode = serverProduct.getVectorClock().getNode(vectorProvider.getServer());
+                    if (!clientProduct.getQuantity().equals(serverNode.getQuantity())) {
+                        overrideClientQuantityWhenLastModifiedDateEqual(clientId, productsToUpdateOnClient, id, serverProduct, clientProduct, serverProduct.getVectorClock());
+                    }
                 }
 
             } catch (JsonProcessingException e) {
