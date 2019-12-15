@@ -25,7 +25,7 @@ import static pl.kania.warehousemanagerclient.model.entities.ProductClient.Produ
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductClient {
+public class ProductClient implements Comparable<ProductClient> {
 
     private Long id;
     private String manufacturerName;
@@ -36,6 +36,19 @@ public class ProductClient {
 //    private String vectorClock;
     private boolean removed;
     private Timestamp lastModified;
+
+    @Override
+    public int compareTo(ProductClient o) {
+        if (o == null) {
+            return -1;
+        } else if (o.getId() == null) {
+            return -1;
+        } else if (this.id == null) {
+            return 1;
+        } else {
+            return (this.id - o.getId()) > 0 ? 1 : -1;
+        }
+    }
 
     public static class ProductEntry implements BaseColumns {
         public static final String PRODUCT_TABLE_NAME = "PRODUCT";

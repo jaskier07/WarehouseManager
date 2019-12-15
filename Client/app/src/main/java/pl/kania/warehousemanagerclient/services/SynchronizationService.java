@@ -54,7 +54,7 @@ public class SynchronizationService {
         for (ProductClient product : updatedProducts) {
             ProductClient productFromDb = db.selectProduct(product.getId(), IdType.GLOBAL).get();
 
-            boolean result = db.updateNonQuantityProductValues(product, IdType.GLOBAL, false);
+            boolean result = db.updateProduct(product, IdType.GLOBAL, false, true);
             if (result) {
                 messages.add("ProductClient has been merged with server (id " + product.getId() + "): " + product.getChangedInfo(productFromDb));
             } else {
@@ -68,7 +68,7 @@ public class SynchronizationService {
             final Optional<ProductClient> product = db.selectProduct(productIdPerLocalId.getKey(), IdType.LOCAL);
             if (product.isPresent()) {
                 product.get().setId(productIdPerLocalId.getValue());
-                db.updateNonQuantityProductValues(product.get(), IdType.LOCAL, false);
+                db.updateProduct(product.get(), IdType.LOCAL, false, false);
                 messages.add("ProductClient global id updated: " + product.toString());
             } else {
                 messages.add("Cannot set product global id (" + productIdPerLocalId.getValue() + ") because product with id (" + productIdPerLocalId.getKey() + " does not exist");

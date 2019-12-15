@@ -66,7 +66,7 @@ public class ProductAdapter extends ArrayAdapter<ProductClient> {
 
         Button update = convertView.findViewById(R.id.buttonUpdate);
         update.setOnClickListener(c -> //new RestService(sharedPreferences).updateProduct(
-                db.updateNonQuantityProductValues(ProductClient.builder()
+                db.updateProduct(ProductClient.builder()
                         .id(product.getId())
                         .manufacturerName(TextParser.getText(manufacturerValue))
                         .modelName(TextParser.getText(modelValue))
@@ -75,7 +75,7 @@ public class ProductAdapter extends ArrayAdapter<ProductClient> {
                         .lastModified(product.getLastModified())
                         .localId(product.getLocalId())
                         .removed(product.isRemoved())
-                        .build(), IdType.LOCAL, true));//, this::updateArrayAdapter));
+                        .build(), IdType.LOCAL, true, false));//, this::updateArrayAdapter));
         Button delete = convertView.findViewById(R.id.buttonDelete);
         delete.setOnClickListener(c -> deleteProduct(TextParser.parseLong(idValue)));
         Button increase = convertView.findViewById(R.id.buttonIncrease);

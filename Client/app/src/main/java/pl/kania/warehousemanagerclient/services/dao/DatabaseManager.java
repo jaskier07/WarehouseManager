@@ -144,7 +144,7 @@ public class DatabaseManager {
         if (product.isPresent()) {
             // TODO permission check
             product.get().setRemoved(true);
-            updateNonQuantityProductValues(product.get(), idType, false);
+            updateProduct(product.get(), idType, false, false);
             return true;
         } else {
             Log.e("delete", "product has not been deleted because it does not exist (global id =" + product + ")");
@@ -152,13 +152,13 @@ public class DatabaseManager {
         }
     }
 
-    public boolean updateNonQuantityProductValues(ProductClient product, IdType idType, boolean updateLastModified) {
+    public boolean updateProduct(ProductClient product, IdType idType, boolean updateLastModified, boolean updateQuantity) {
         if (updateLastModified) {
             updateProductLastModified(product);
         }
 
         open();
-        final ContentValues cv = ProductMapper.mapProductToContentValues(product, false);
+        final ContentValues cv = ProductMapper.mapProductToContentValues(product, updateQuantity);
         final Long id = idType == IdType.GLOBAL ? product.getId() : product.getLocalId();
         boolean updated = db.update(PRODUCT_TABLE_NAME, cv, idType.getDbKey() + " = " + id, null) > 0;
         if (!updated) {
@@ -187,21 +187,5 @@ public class DatabaseManager {
     private void updateProductLastModified(ProductClient product) {
         product.setLastModified(new Timestamp(new Date().getTime()));
     }
-
-//    private void updateProductVectorClock(ProductClient product) {
-//        try {
-//            ProductVectorClock vectorClock = product.getVectorClock();
-//            if (vectorClock == null) {
-//                final ProductVectorClockNode server = new ProductVectorClockNode(cp.getServerId());
-//                final ProductVectorClockNode u1 = new ProductVectorClockNode(cp.getDevice1Id());
-//                final ProductVectorClockNode u2 = new ProductVectorClockNode(cp.getDevice2Id());
-//                vectorClock = new ProductVectorClock(Arrays.asList(server, u1, u2));
-//            }
-//            vectorClock.getNode(cp.getClientId()).incrementVersion();
-//            product.setVectorClock(vectorClock);
-//        } catch (Exception e) {
-//            Log.e("Vector clock", "An error occured while updating vector clock");
-//        }
-//    }
 
 }
