@@ -6,11 +6,10 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import pl.kania.warehousemanagerclient.model.SharedPreferencesKey;
 import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.ui.fragments.LogInFragment;
 
-import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;
-import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_TOKEN;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (sharedPreferences.getString(SHARED_PREFERENCES_TOKEN, null) != null) {
+        if (sharedPreferences.getString(SharedPreferencesKey.TOKEN.getKey(), null) != null) {
             super.onBackPressed();
         }
     }
@@ -27,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences(SharedPreferencesKey.SHARED_PREFERENCES_NAME.getKey(), Context.MODE_PRIVATE);
         db = new DatabaseManager(getApplicationContext());
         setContentView(R.layout.main_activity);
         if (savedInstanceState == null) {

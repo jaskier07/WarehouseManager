@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
+import pl.kania.warehousemanagerclient.model.SharedPreferencesKey;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnServer;
 import pl.kania.warehousemanagerclient.model.dto.ProductQuantity;
@@ -14,8 +15,6 @@ import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
 import pl.kania.warehousemanagerclient.model.login.LoginResult;
 import pl.kania.warehousemanagerclient.model.login.UserCredentials;
-
-import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_TOKEN;
 
 public class RestService {
 
@@ -72,7 +71,7 @@ public class RestService {
     }
 
     private String getToken() {
-        return sharedPreferences.getString(SHARED_PREFERENCES_TOKEN, "");
+        return sharedPreferences.getString(SharedPreferencesKey.TOKEN.getKey(), "");
     }
 
     public LoginResult signIn(UserCredentials userCredentials) throws ExecutionException, InterruptedException {

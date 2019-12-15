@@ -9,9 +9,5 @@ public class LoginResult {
     private String token;
     private String login;
     private String errorMessage;
-
-    public LoginResult(String token, String login) {
-        this.token = token;
-        this.login = login;
-    }
+    private boolean manager;
 }

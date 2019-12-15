@@ -17,6 +17,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import java.util.List;
 
 import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.model.SharedPreferencesKey;
 import pl.kania.warehousemanagerclient.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanagerclient.model.login.LoggingMethod;
 import pl.kania.warehousemanagerclient.services.ConfigurationProvider;
@@ -25,9 +26,6 @@ import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.services.tasks.RestService;
 import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
-import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_LOGGING_METHOD;
-import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_TOKEN;
-import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_USER_LOGIN;
 
 public class MenuFragment extends AbstractFragment {
 
@@ -52,7 +50,7 @@ public class MenuFragment extends AbstractFragment {
         addProduct.setOnClickListener(k -> FragmentLoader.load(new AddProductFragment(getSharedPreferences(), getDb()), getFragmentManager()));
         final Button productList = view.findViewById(R.id.buttonGoToProductList);
         productList.setOnClickListener(k -> FragmentLoader.load(new ProductListViewFragment(getSharedPreferences(), getDb()), getFragmentManager()));
-        final String userLogin = getSharedPreferences().getString(SHARED_PREFERENCES_USER_LOGIN, "unlogged user!");
+        final String userLogin = getSharedPreferences().getString(SharedPreferencesKey.USER_LOGIN.getKey(), "unlogged user!");
         final TextView loggedAs = view.findViewById(R.id.textViewLoggedAs);
         loggedAs.setText("You are logged as " + userLogin);
         final Button logout = view.findViewById(R.id.buttonLogout);
@@ -88,10 +86,11 @@ public class MenuFragment extends AbstractFragment {
     }
 
     private void actionLogout() {
-        getSharedPreferences().edit().putString(SHARED_PREFERENCES_TOKEN, null).commit();
+        getSharedPreferences().edit().putString(SharedPreferencesKey.TOKEN.getKey(), null).commit();
+        getSharedPreferences().edit().putString(SharedPreferencesKey.USER_IS_MANAGER.getKey(), null).commit();
         Toast.makeText(getContext(), "You have been logged out", Toast.LENGTH_LONG).show();
 
-        String loggingMethod = getSharedPreferences().getString(SHARED_PREFERENCES_LOGGING_METHOD, null);
+        String loggingMethod = getSharedPreferences().getString(SharedPreferencesKey.LOGGING_METHOD.getKey(), null);
         if (loggingMethod != null) {
             if (LoggingMethod.valueOf(loggingMethod) == LoggingMethod.GOOGLE) {
                 googleClientSignIn.signOut().addOnCompleteListener(a -> Toast.makeText(getContext(), "Logged out", Toast.LENGTH_LONG).show());

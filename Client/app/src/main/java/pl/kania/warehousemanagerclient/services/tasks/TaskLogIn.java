@@ -24,7 +24,8 @@ public class TaskLogIn extends AbstractRestTask<UserCredentials, LoginResult> {
         try {
             final Response response = executeRequest(getRequest(credentials[0]));
             final ResponseBody responseBody = response.body();
-            final LoginResult loginResult = getObjectMapper().readValue(responseBody.string(), LoginResult.class);
+            String responseBodyString = responseBody.string();
+            final LoginResult loginResult = getObjectMapper().readValue(responseBodyString, LoginResult.class);
             if (response.isSuccessful() ) {
                 return loginResult;
             } else {

@@ -21,11 +21,11 @@ import java.util.function.Consumer;
 
 import pl.kania.warehousemanagerclient.R;
 import pl.kania.warehousemanagerclient.model.IdType;
+import pl.kania.warehousemanagerclient.model.SharedPreferencesKey;
 import pl.kania.warehousemanagerclient.model.entities.ProductClient;
 import pl.kania.warehousemanagerclient.services.dao.DatabaseManager;
 import pl.kania.warehousemanagerclient.utils.TextParser;
 
-import static pl.kania.warehousemanagerclient.ui.fragments.LogInFragment.SHARED_PREFERENCES_NAME;
 import static pl.kania.warehousemanagerclient.utils.TextParser.getValidDoubleValue;
 import static pl.kania.warehousemanagerclient.utils.TextParser.getValidIntegerValue;
 
@@ -49,7 +49,7 @@ public class ProductAdapter extends ArrayAdapter<ProductClient> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.product_list_element_fragment, parent, false);
         }
         ProductClient product = getItem(position);
-        sharedPreferences = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+        sharedPreferences = getContext().getSharedPreferences(SharedPreferencesKey.SHARED_PREFERENCES_NAME.getKey(), Context.MODE_PRIVATE);
 
         EditText manufacturerValue = convertView.findViewById(R.id.manufacturerValue);
         manufacturerValue.setText(product.getManufacturerName());
@@ -100,11 +100,11 @@ public class ProductAdapter extends ArrayAdapter<ProductClient> {
     }
 
     private void deleteProduct(Long productId) {
-        //new RestService(sharedPreferences).deleteProduct(TextParser.parseLong(idValue), this::updateArrayAdapter,
-        //this::showInfoNoPermission));
-        // TODO pobranie id zalogowanego użytkownika
-        // TODO pobranie jego roli
-        // TODO przekazanie do metody wraz z akcją na brak uprawnień
+        final String isUserManager = sharedPreferences.getString(SharedPreferencesKey.USER_IS_MANAGER.getKey(), null);
+        if (isUserManager == null || !Boolean.valueOf(isUserManager).equals(Boolean.TRUE)) {
+            showInfo("Only manager can delete products!");
+            return;
+        }
         if (db.deleteProduct(productId, IdType.LOCAL)) {
             updateArrayAdapter();
         }

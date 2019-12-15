@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import pl.kania.warehousemanagerclient.R;
+import pl.kania.warehousemanagerclient.model.SharedPreferencesKey;
 import pl.kania.warehousemanagerclient.model.login.GoogleCredentials;
 import pl.kania.warehousemanagerclient.model.login.LoggingMethod;
 import pl.kania.warehousemanagerclient.model.login.LoginResult;
@@ -37,10 +38,7 @@ import pl.kania.warehousemanagerclient.utils.FragmentLoader;
 
 public class LogInFragment extends AbstractFragment {
 
-    public static final String SHARED_PREFERENCES_NAME = "com.kania.warehousemanager.client";
-    public static final String SHARED_PREFERENCES_TOKEN = SHARED_PREFERENCES_NAME + "token";
-    public static final String SHARED_PREFERENCES_USER_LOGIN = SHARED_PREFERENCES_NAME + "userLogin";
-    static final String SHARED_PREFERENCES_LOGGING_METHOD = SHARED_PREFERENCES_NAME + "loggingMethod";
+
     private static final int R_LOG_IN = 1;
     private static final int R_SIGN_IN = 2;
     private EditText loginEditText;
@@ -75,7 +73,7 @@ public class LogInFragment extends AbstractFragment {
         loginEditTextSignIn = view.findViewById(R.id.loginValueSignIn);
         passwordEditTextSignIn = view.findViewById(R.id.passwordValueSignIn);
 
-        final String token = getSharedPreferences().getString(SHARED_PREFERENCES_TOKEN, null);
+        final String token = getSharedPreferences().getString(SharedPreferencesKey.TOKEN.getKey(), null);
         final GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .requestIdToken(configurationProvider.getClientId())
@@ -164,8 +162,9 @@ public class LogInFragment extends AbstractFragment {
 
     private void handleLoginResult(LoginResult loginResult, LoggingMethod loggingMethod) {
         if (loginResult.getErrorMessage() == null) {
-            getSharedPreferences().edit().putString(SHARED_PREFERENCES_USER_LOGIN, loginResult.getLogin()).commit();
-            getSharedPreferences().edit().putString(SHARED_PREFERENCES_LOGGING_METHOD, loggingMethod.toString()).apply();
+            getSharedPreferences().edit().putString(SharedPreferencesKey.USER_LOGIN.getKey(), loginResult.getLogin()).commit();
+            getSharedPreferences().edit().putString(SharedPreferencesKey.LOGGING_METHOD.getKey(), loggingMethod.toString()).apply();
+            getSharedPreferences().edit().putString(SharedPreferencesKey.USER_IS_MANAGER.getKey(), String.valueOf(loginResult.isManager())).commit();
             saveToken(loginResult.getToken());
             loginEditText.setText("");
             loginEditTextSignIn.setText("");
@@ -230,7 +229,7 @@ public class LogInFragment extends AbstractFragment {
     }
 
     private void saveToken(String token) {
-        if (!getSharedPreferences().edit().putString(SHARED_PREFERENCES_TOKEN, token).commit()) {
+        if (!getSharedPreferences().edit().putString(SharedPreferencesKey.TOKEN.getKey(), token).commit()) {
             info.setText("Saving token to preferences failed.");
         }
     }
