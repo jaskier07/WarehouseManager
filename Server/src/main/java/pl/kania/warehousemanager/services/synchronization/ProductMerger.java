@@ -8,6 +8,7 @@ import pl.kania.warehousemanager.model.ProductMapper;
 import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.ProductClient;
 import pl.kania.warehousemanager.model.vector.ProductVectorClock;
+import pl.kania.warehousemanager.services.beans.VectorProvider;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
 
 import java.sql.Timestamp;
@@ -29,14 +30,17 @@ public class ProductMerger {
     @Autowired
     private QuantityConflictResolver quantityConflictResolver;
 
+    @Autowired
+    private VectorProvider vectorProvider;
+
     public List<ProductClient> mergeProducts(Map<Long, Product> serverProducts, Map<Long, ProductClient> clientProducts, Set<Long> commonProductIds, String clientId) {
         final List<ProductClient> productsToUpdateOnClient = new ArrayList<>();
         for (Long id : commonProductIds) {
             final Product serverProduct = serverProducts.get(id);
             final ProductClient clientProduct = clientProducts.get(id);
-            if (!serverProduct.getLastModified().equals(clientProduct.getLastModified())) {
-                try {
-                    ProductVectorClock vector = quantityConflictResolver.getProductVectorClock(serverProduct.getVectorClock(), clientProduct.getQuantity(), clientId);
+            try {
+                final ProductVectorClock vector = quantityConflictResolver.getProductVectorClock(serverProduct.getVectorClock(), clientProduct.getQuantity(), clientId);
+                if (!serverProduct.getLastModified().equals(clientProduct.getLastModified())) {
                     log.info("New vector clock for product (id " + id + ") " + vector.toString());
                     try {
                         if (serverProduct.getLastModified().before(clientProduct.getLastModified())) {
@@ -50,12 +54,24 @@ public class ProductMerger {
                     } catch (Exception e) {
                         log.error("An error occurred while merging product (id " + id + ")", e);
                     }
-                } catch (JsonProcessingException e) {
-                    log.error("An error with vector clock occurred while merging product versions from client and id (id " + id + ")", e);
+                } else if (!clientProduct.getQuantity().equals(vector.getNode(vectorProvider.getServer()).getQuantity())) {
+                    overrideClientQuantityWhenLastModifiedDateEqual(clientId, productsToUpdateOnClient, id, serverProduct, clientProduct, vector);
                 }
+
+            } catch (JsonProcessingException e) {
+                log.error("An error with vector clock occurred while merging product versions from client and id (id " + id + ")", e);
             }
         }
         return productsToUpdateOnClient;
+    }
+
+    private void overrideClientQuantityWhenLastModifiedDateEqual(String clientId, List<ProductClient> productsToUpdateOnClient, Long id, Product serverProduct, ProductClient clientProduct, ProductVectorClock vector) throws JsonProcessingException {
+        vector.copyQuantity(vectorProvider.getServer(), clientId);
+        serverProduct.setVectorClock(vector);
+        productRepository.save(serverProduct);
+        clientProduct.setQuantity(vector.getNode(clientId).getQuantity());
+        productsToUpdateOnClient.add(clientProduct);
+        log.info("Client's quantity different from server's quantity, client's quantity set to " + clientProduct.getQuantity() +" (id " + id + ")");
     }
 
     private ProductClient overwriteClientProduct(Long id, Product serverProduct, ProductClient clientProduct, String clientId) throws CloneNotSupportedException, JsonProcessingException {
