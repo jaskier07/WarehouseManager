@@ -1,16 +1,15 @@
 package pl.kania.warehousemanager;
 
-import org.junit.jupiter.api.DisplayName;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StringsTest {
-
-    private static final String[] WHITESPACES = {" ", "\n", "\r", "\t", ""};
 
     @Test
     void givenNullableStringWhenCallingIsNullOrEmptyThenReturnTrue() {
@@ -22,9 +21,27 @@ class StringsTest {
         assertFalse(Strings.isNullOrEmpty("example"));
     }
 
-    @Test
-    @DisplayName("Check if calling isNullOrEmpty() on string containing only whitespaces returns true")
-    void givenNonEmptyStringWithWhitespaceWhenCallingIsNullOrEmptyThenReturnTrue() {
-        Arrays.stream(WHITESPACES).forEach(w -> assertTrue(Strings.isNullOrEmpty(w)));
+    @ParameterizedTest(name = "Check if calling isNullOrEmpty() on string containing only whitespace ({0}) returns true")
+    @EnumSource(value = Whitespace.class)
+    void givenNonEmptyStringWithWhitespaceWhenCallingIsNullOrEmptyThenReturnTrue(Whitespace whitespace) {
+        assertTrue(Strings.isNullOrEmpty(whitespace.getValue()));
+    }
+
+    @Getter
+    @AllArgsConstructor
+    enum Whitespace {
+        EMPTY_STRING("", "Empty string"),
+        SPACE(" ", "Space"),
+        CARET_RETURN("\r", "\\r"),
+        TAB("\t", "\\t"),
+        NEW_LINE("\n", "\\n");
+
+        private String value;
+        private String description;
+
+        @Override
+        public String toString() {
+            return description;
+        }
     }
 }
