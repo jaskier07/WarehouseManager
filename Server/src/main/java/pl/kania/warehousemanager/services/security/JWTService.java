@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import pl.kania.warehousemanager.exceptions.TokenNotFoundInHeaderException;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
 import pl.kania.warehousemanager.model.db.User;
@@ -27,7 +28,6 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -60,16 +60,16 @@ public class JWTService {
     }
 
     public boolean hasRole(WarehouseRole requiredRole, String header) {
-        final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header, new ArrayList<>());
-        if (!token.isPresent()) {
-            return false;
-        }
-        final DecodedJWT decodedToken = JWT.decode(token.get());
-        final Claim role = decodedToken.getClaim("role");
-        if (role.isNull()) {
-            return false;
-        }
         try {
+            final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
+            if (!token.isPresent()) {
+                return false;
+            }
+            final DecodedJWT decodedToken = JWT.decode(token.get());
+            final Claim role = decodedToken.getClaim("role");
+            if (role.isNull()) {
+                return false;
+            }
             WarehouseRole userRole = WarehouseRole.valueOf(role.asString());
             if (requiredRole == WarehouseRole.MANAGER) {
                 return userRole == WarehouseRole.MANAGER;
@@ -77,57 +77,70 @@ public class JWTService {
             return true;
         } catch (IllegalArgumentException e) {
             return false;
+        } catch (TokenNotFoundInHeaderException t) {
+            log.error(t.getMessage());
+            return false;
         }
     }
 
     public Optional<String> getClientId(String header) {
-        final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header, new ArrayList<>());
-        if (!token.isPresent()) {
-            return Optional.empty();
-        }
-        final DecodedJWT decodedJwt = JWT.decode(token.get());
+        try {
+            final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
+            if (!token.isPresent()) {
+                return Optional.empty();
+            }
+            final DecodedJWT decodedJwt = JWT.decode(token.get());
 
-        final Claim clientIdClaim = decodedJwt.getClaim("clientId");
-        if (clientIdClaim.isNull()) {
+            final Claim clientIdClaim = decodedJwt.getClaim("clientId");
+            if (clientIdClaim.isNull()) {
+                return Optional.empty();
+            }
+            return Optional.of(clientIdClaim.asString());
+        } catch (TokenNotFoundInHeaderException e) {
+            log.error(e.getMessage());
             return Optional.empty();
         }
-        return Optional.of(clientIdClaim.asString());
     }
 
     public boolean checkPermissions(String header, Consumer<String> responseSetter) {
-        final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header, new ArrayList<>());
-        if (!token.isPresent()) {
-            responseSetter.accept("No token in authorization header");
+        try {
+            final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
+            if (!token.isPresent()) {
+                responseSetter.accept("No token in authorization header");
+                return false;
+            }
+            final DecodedJWT decodedJwt = JWT.decode(token.get());
+
+            final Claim clientIdClaim = decodedJwt.getClaim("clientId");
+            if (clientIdClaim.isNull()) {
+                responseSetter.accept("Lack of client id.");
+                return false;
+            }
+
+            final String clientId = clientIdClaim.asString();
+            final String clientSecret = clientDetailsRepository.findClientSecretByClientId(clientId);
+            if (clientSecret == null) {
+                responseSetter.accept("Bad client id.");
+                return false;
+            }
+
+            final DecodedJWT validatedJwt = validateIntegrity(decodedJwt, clientSecret, responseSetter);
+            if (validatedJwt == null) {
+                return false;
+            }
+
+            if (!decodedJwt.getIssuer().equals(environment.getProperty("server.issuer"))) {
+                responseSetter.accept("Invalid issuer");
+            } else if (!decodedJwt.getAudience().contains(environment.getProperty("server.audience"))) {
+                responseSetter.accept("Server is not in the audience.");
+            } else {
+                return true;
+            }
+            return false;
+        } catch (TokenNotFoundInHeaderException e) {
+            log.error(e.getMessage());
             return false;
         }
-        final DecodedJWT decodedJwt = JWT.decode(token.get());
-
-        final Claim clientIdClaim = decodedJwt.getClaim("clientId");
-        if (clientIdClaim.isNull()) {
-            responseSetter.accept("Lack of client id.");
-            return false;
-        }
-
-        final String clientId = clientIdClaim.asString();
-        final String clientSecret = clientDetailsRepository.findClientSecretByClientId(clientId);
-        if (clientSecret == null) {
-            responseSetter.accept("Bad client id.");
-            return false;
-        }
-
-        final DecodedJWT validatedJwt = validateIntegrity(decodedJwt, clientSecret, responseSetter);
-        if (validatedJwt == null) {
-            return false;
-        }
-
-        if (!decodedJwt.getIssuer().equals(environment.getProperty("server.issuer"))) {
-            responseSetter.accept("Invalid issuer");
-        } else if (!decodedJwt.getAudience().contains(environment.getProperty("server.audience"))) {
-            responseSetter.accept("Server is not in the audience.");
-        } else {
-            return true;
-        }
-        return false;
     }
 
     private DecodedJWT validateIntegrity(DecodedJWT token, String clientSecret, Consumer<String> responseSetter) {

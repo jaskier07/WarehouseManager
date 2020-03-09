@@ -119,7 +119,6 @@ public class SynchronizationService {
         for (Long serverProductId : serverProducts.keySet()) {
             if (!clientProducts.containsKey(serverProductId) && !clientRemovedProducts.contains(serverProductId)) {
                 try {
-                    // FIXME no need to update last product modification timestamp?
                     final Product product = serverProducts.get(serverProductId);
                     final ProductVectorClock vectorClock = product.getVectorClock();
                     vectorClock.copyQuantity(vectorProvider.getServer(), clientId);

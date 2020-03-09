@@ -2,6 +2,7 @@ package pl.kania.warehousemanager.services.resources;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.kania.warehousemanager.Strings;
+import pl.kania.warehousemanager.exceptions.TokenNotFoundInHeaderException;
 import pl.kania.warehousemanager.model.UserCredentials;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
@@ -22,10 +24,12 @@ import pl.kania.warehousemanager.services.dao.UserRepository;
 import pl.kania.warehousemanager.services.security.JWTService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 public class AuthorizationResource {
 
@@ -49,61 +53,70 @@ public class AuthorizationResource {
     @PostMapping(value = "/sign-in-with-google")
     public ResponseEntity<LoginResult> signInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
         final List<String> errors = new ArrayList<>();
-        final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization, errors);
+        try {
+            final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization);
+            if (!googleToken.isPresent()) {
+                return getErrorRequest(errors);
+            }
 
-        if (!googleToken.isPresent()) {
-            return getErrorRequest(errors);
+            final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get(), errors);
+            if (!payload.isPresent()) {
+                return getErrorRequest(errors);
+            }
+
+            final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
+            if (!clientFromRequest.isPresent()) {
+                return getErrorRequest(errors);
+            }
+
+            if (userRepository.findByLogin(payload.get().getEmail()) != null) {
+                errors.add("User with this login already exists");
+                return getErrorRequest(errors);
+            }
+
+            final User userToSave = new User(payload.get().getEmail(), null, WarehouseRole.EMPLOYEE);
+            final User savedUser = userRepository.save(userToSave);
+
+            final String jwt = jwtService.createJwt(savedUser, clientFromRequest.get());
+            return ResponseEntity.ok(new LoginResult(jwt, savedUser.getLogin(), savedUser.isManager()));
+        } catch (TokenNotFoundInHeaderException e) {
+            log.error(e.getMessage());
+            return getErrorRequest(e.getMessage());
         }
-
-        final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get(), errors);
-        if (!payload.isPresent()) {
-            return getErrorRequest(errors);
-        }
-
-        final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
-        if (!clientFromRequest.isPresent()) {
-            return getErrorRequest(errors);
-        }
-
-        if (userRepository.findByLogin(payload.get().getEmail()) != null) {
-            errors.add("User with this login already exists");
-            return getErrorRequest(errors);
-        }
-
-        final User userToSave = new User(payload.get().getEmail(), null, WarehouseRole.EMPLOYEE);
-        final User savedUser = userRepository.save(userToSave);
-
-        final String jwt = jwtService.createJwt(savedUser, clientFromRequest.get());
-        return ResponseEntity.ok(new LoginResult(jwt, savedUser.getLogin(), savedUser.isManager()));
     }
 
     @PostMapping(value = "/log-in-with-google")
     public ResponseEntity<LoginResult> logInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
         final List<String> errors = new ArrayList<>();
-        final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization, errors);
-        if (!googleToken.isPresent()) {
-            return getErrorRequest(errors);
+        try {
+            final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization);
+            if (!googleToken.isPresent()) {
+                return getErrorRequest(errors);
+            }
+
+            final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get(), errors);
+            if (!payload.isPresent()) {
+                return getErrorRequest(errors);
+            }
+
+            final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
+            if (!clientFromRequest.isPresent()) {
+                return getErrorRequest(errors);
+            }
+
+            final User user = userRepository.findByLogin(payload.get().getEmail());
+            if (user == null) {
+                errors.add("User not found");
+                return getErrorRequest(errors);
+            }
+
+            final String jwt = jwtService.createJwt(user, clientFromRequest.get());
+
+            return ResponseEntity.ok(new LoginResult(jwt, user.getLogin(), user.isManager()));
+        } catch (TokenNotFoundInHeaderException e) {
+            log.error(e.getMessage());
+            return getErrorRequest(e.getMessage());
         }
-
-        final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get(), errors);
-        if (!payload.isPresent()) {
-            return getErrorRequest(errors);
-        }
-
-        final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
-        if (!clientFromRequest.isPresent()) {
-            return getErrorRequest(errors);
-        }
-
-        final User user = userRepository.findByLogin(payload.get().getEmail());
-        if (user == null) {
-            errors.add("User not found");
-            return getErrorRequest(errors);
-        }
-
-        final String jwt = jwtService.createJwt(user, clientFromRequest.get());
-
-        return ResponseEntity.ok(new LoginResult(jwt, user.getLogin(), user.isManager()));
     }
 
     @PostMapping(value = "/log-in")
@@ -120,27 +133,33 @@ public class AuthorizationResource {
 
     @PostMapping(value = "/sign-in")
     public ResponseEntity<LoginResult> signIn(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
-        final List<String> errors = new ArrayList<>();
-        final Optional<UserCredentials> credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
-        if (!credentials.isPresent()) {
-            return getErrorRequest(errors);
+        try {
+            final List<String> errors = new ArrayList<>();
+            Optional<UserCredentials> credentials;
+            credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
+            if (!credentials.isPresent()) {
+                return getErrorRequest(errors);
+            }
+
+            final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
+            if (!clientFromRequest.isPresent()) {
+                return getErrorRequest(errors);
+            }
+
+            if (userRepository.findByLogin(credentials.get().getLogin()) != null) {
+                errors.add("User with this login already exists");
+                return getErrorRequest(errors);
+            }
+
+            final User userToSave = new User(credentials.get().getLogin(), passwordEncoder.encode(credentials.get().getPassword()), WarehouseRole.EMPLOYEE);
+            final User savedUser = userRepository.save(userToSave);
+
+            final String token = createToken(new UserAndClientFromRequest(savedUser, clientFromRequest.get()));
+            return ResponseEntity.ok(new LoginResult(token, savedUser.getLogin(), savedUser.isManager()));
+        } catch (TokenNotFoundInHeaderException e) {
+            log.error("Token not found in header", e);
+            return getErrorRequest(e.getMessage());
         }
-
-        final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
-        if (!clientFromRequest.isPresent()) {
-            return getErrorRequest(errors);
-        }
-
-        if (userRepository.findByLogin(credentials.get().getLogin()) != null) {
-            errors.add("User with this login already exists");
-            return getErrorRequest(errors);
-        }
-
-        final User userToSave = new User(credentials.get().getLogin(), passwordEncoder.encode(credentials.get().getPassword()), WarehouseRole.EMPLOYEE);
-        final User savedUser = userRepository.save(userToSave);
-
-        final String token = createToken(new UserAndClientFromRequest(savedUser, clientFromRequest.get()));
-        return ResponseEntity.ok(new LoginResult(token, savedUser.getLogin(), savedUser.isManager()));
     }
 
     private String createToken(UserAndClientFromRequest userFromClient) {
@@ -148,8 +167,14 @@ public class AuthorizationResource {
     }
 
     private Optional<UserAndClientFromRequest> getUserFromClient(String authorization, Map<String, String> body, List<String> errors, boolean validatePassword) {
-        final Optional<UserCredentials> credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
-        if (!credentials.isPresent()) {
+        final Optional<UserCredentials> credentials;
+        try {
+            credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
+            if (!credentials.isPresent()) {
+                return Optional.empty();
+            }
+        } catch (TokenNotFoundInHeaderException e) {
+            log.error("Token not found in authorization header", e);
             return Optional.empty();
         }
 
@@ -203,6 +228,10 @@ public class AuthorizationResource {
         final LoginResult loginResult = new LoginResult();
         loginResult.setErrorMessage(errorMessage.size() == 1 ? errorMessage.get(0) : "Operation failed");
         return ResponseEntity.badRequest().body(loginResult);
+    }
+
+    private ResponseEntity<LoginResult> getErrorRequest(String errorMessage) {
+        return getErrorRequest(Collections.singletonList(errorMessage));
     }
 
     @Value
