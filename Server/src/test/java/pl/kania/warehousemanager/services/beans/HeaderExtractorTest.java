@@ -1,20 +1,19 @@
 package pl.kania.warehousemanager.services.beans;
 
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import pl.kania.warehousemanager.exceptions.TokenNotFoundInHeaderException;
+import pl.kania.warehousemanager.stereotype.RequiredSpringContext;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest
+@RequiredSpringContext
 class HeaderExtractorTest {
 
     private static final String TOKEN = "1c01c352-0bc3-43bf-b851-0d1a533cc79f";
@@ -39,7 +38,7 @@ class HeaderExtractorTest {
         Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
         assertNotEquals(Optional.empty(), token);
 
-        Assumptions.assumeFalse(!token.isPresent());
+        Assumptions.assumeTrue(token.isPresent());
         assertEquals(TOKEN, token.get());
     }
 }

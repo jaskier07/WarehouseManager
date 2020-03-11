@@ -2,12 +2,13 @@ package pl.kania.warehousemanager.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import pl.kania.warehousemanager.model.TransferableProduct;
 
 import java.sql.Timestamp;
 
 @Setter
 @Getter
-public class ProductClient {
+public class ProductClient implements TransferableProduct {
     private Long id;
     private Long localId;
     private String manufacturerName;

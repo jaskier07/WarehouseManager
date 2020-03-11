@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
+import pl.kania.warehousemanager.model.TransferableProduct;
 import pl.kania.warehousemanager.model.vector.ProductVectorClock;
 import pl.kania.warehousemanager.model.vector.ProductVectorClockNode;
 
@@ -18,7 +19,7 @@ import java.util.List;
 @Entity
 @Setter
 @Getter
-public class Product implements Cloneable {
+public class Product implements Cloneable, TransferableProduct {
 
     @Id
     @GeneratedValue
