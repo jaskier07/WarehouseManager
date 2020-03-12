@@ -1,6 +1,7 @@
 package pl.kania.warehousemanager.model;
 
 import lombok.SneakyThrows;
+import pl.kania.warehousemanager.factory.TestProductFactory;
 import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.ProductClient;
 

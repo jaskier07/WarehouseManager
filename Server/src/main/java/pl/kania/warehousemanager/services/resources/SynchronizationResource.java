@@ -11,6 +11,7 @@ import pl.kania.warehousemanager.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanager.model.dto.DataToSyncOnServer;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
 import pl.kania.warehousemanager.services.security.JWTService;
+import pl.kania.warehousemanager.services.security.RoleChecker;
 import pl.kania.warehousemanager.services.synchronization.SynchronizationService;
 
 import java.util.Optional;
@@ -27,9 +28,12 @@ public class SynchronizationResource {
     @Autowired
     private SynchronizationService synchronizationService;
 
+    @Autowired
+    private RoleChecker roleChecker;
+
     @PostMapping(path = "/synchronize")
     private ResponseEntity<DataToSyncOnClient> synchronizeWithDevice(@RequestBody DataToSyncOnServer dataToSyncOnServer, @RequestHeader("Authorization") String authorization) {
-        if (!jwtService.hasRole(WarehouseRole.EMPLOYEE, authorization)) {
+        if (!roleChecker.hasRole(WarehouseRole.EMPLOYEE, authorization)) {
             return ResponseEntity.status(401).build();
         }
 

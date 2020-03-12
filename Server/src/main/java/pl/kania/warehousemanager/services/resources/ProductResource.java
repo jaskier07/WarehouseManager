@@ -21,6 +21,7 @@ import pl.kania.warehousemanager.model.dto.ChangeQuantityResult;
 import pl.kania.warehousemanager.services.beans.VectorProvider;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
 import pl.kania.warehousemanager.services.security.JWTService;
+import pl.kania.warehousemanager.services.security.RoleChecker;
 
 import javax.ws.rs.QueryParam;
 import java.net.URI;
@@ -38,6 +39,9 @@ public class ProductResource {
 
     @Autowired
     private VectorProvider vectorProvider;
+
+    @Autowired
+    private RoleChecker roleChecker;
 
     @GetMapping("/products")
     public ResponseEntity<Iterable<Product>> getAllProducts(@RequestHeader("Authorization") String header) {
@@ -153,7 +157,7 @@ public class ProductResource {
     }
 
     private boolean userDoesNotHavePermission(WarehouseRole role, @RequestHeader("Authorization") String header) {
-        return !jwtService.hasRole(role, header);
+        return !roleChecker.hasRole(role, header);
     }
 
     private boolean productNotExists(@QueryParam("productId") Long productId) {

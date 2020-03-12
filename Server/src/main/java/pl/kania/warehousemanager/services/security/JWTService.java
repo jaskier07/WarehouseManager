@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import pl.kania.warehousemanager.exceptions.TokenNotFoundInHeaderException;
-import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
 import pl.kania.warehousemanager.model.db.User;
 import pl.kania.warehousemanager.services.beans.HeaderExtractor;
@@ -57,30 +56,6 @@ public class JWTService {
                 .withClaim("role", user.getRole().name())
                 .withClaim("clientId", clientDetails.getClientId())
                 .sign(Algorithm.HMAC256(clientDetails.getClientSecret()));
-    }
-
-    public boolean hasRole(WarehouseRole requiredRole, String header) {
-        try {
-            final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
-            if (!token.isPresent()) {
-                return false;
-            }
-            final DecodedJWT decodedToken = JWT.decode(token.get());
-            final Claim role = decodedToken.getClaim("role");
-            if (role.isNull()) {
-                return false;
-            }
-            WarehouseRole userRole = WarehouseRole.valueOf(role.asString());
-            if (requiredRole == WarehouseRole.MANAGER) {
-                return userRole == WarehouseRole.MANAGER;
-            }
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        } catch (TokenNotFoundInHeaderException t) {
-            log.error(t.getMessage());
-            return false;
-        }
     }
 
     public Optional<String> getClientId(String header) {

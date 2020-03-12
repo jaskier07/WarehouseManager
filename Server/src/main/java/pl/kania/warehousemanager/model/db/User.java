@@ -2,6 +2,7 @@ package pl.kania.warehousemanager.model.db;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import pl.kania.warehousemanager.model.WarehouseRole;
 
 import javax.persistence.Column;
@@ -17,6 +18,7 @@ import javax.persistence.Id;
 public class User {
 
     @Id
+    @Setter
     @GeneratedValue
     private Long id;
 
