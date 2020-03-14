@@ -20,6 +20,7 @@ import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.ChangeQuantityResult;
 import pl.kania.warehousemanager.services.beans.VectorProvider;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
+import pl.kania.warehousemanager.services.security.ClientIdExtractor;
 import pl.kania.warehousemanager.services.security.JWTService;
 import pl.kania.warehousemanager.services.security.RoleChecker;
 
@@ -65,7 +66,7 @@ public class ProductResource {
         if (product == null) {
             return getError();
         }
-        final Optional<String> clientId = jwtService.getClientId(header);
+        final Optional<String> clientId = ClientIdExtractor.extractFromHeader(header);
         if (!clientId.isPresent()) {
             return getError();
         }

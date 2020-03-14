@@ -9,17 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.dto.DataToSyncOnClient;
 import pl.kania.warehousemanager.model.dto.DataToSyncOnServer;
-import pl.kania.warehousemanager.services.security.JWTService;
+import pl.kania.warehousemanager.services.security.ClientIdExtractor;
 import pl.kania.warehousemanager.services.security.RoleChecker;
 import pl.kania.warehousemanager.services.synchronization.SynchronizationService;
 
 import java.util.Optional;
 
 @RestController
-public class SynchronizationResource {
-
-    @Autowired
-    private JWTService jwtService;
+public class SynchronizationResource { ;
 
     @Autowired
     private SynchronizationService synchronizationService;
@@ -30,7 +27,7 @@ public class SynchronizationResource {
             return ResponseEntity.status(401).build();
         }
 
-        final Optional<String> clientId = jwtService.getClientId(authorization);
+        final Optional<String> clientId = ClientIdExtractor.extractFromHeader(authorization);
         if (!clientId.isPresent()) {
             return ResponseEntity.badRequest().build();
         }

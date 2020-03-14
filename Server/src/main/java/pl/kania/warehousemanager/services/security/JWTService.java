@@ -44,24 +44,6 @@ public class JWTService {
         return TokenCreator.createJWT(user, clientDetails, environment.getProperty("server.issuer"), environment.getProperty("server.audience"));
     }
 
-    public Optional<String> getClientId(String header) {
-        try {
-            final Optional<String> token = HeaderExtractor.extractTokenFromAuthorizationHeader(header);
-            if (!token.isPresent()) {
-                return Optional.empty();
-            }
-            final DecodedJWT decodedJwt = JWT.decode(token.get());
-
-            final Claim clientIdClaim = decodedJwt.getClaim("clientId");
-            if (clientIdClaim.isNull()) {
-                return Optional.empty();
-            }
-            return Optional.of(clientIdClaim.asString());
-        } catch (TokenNotFoundInHeaderException e) {
-            log.error(e.getMessage());
-            return Optional.empty();
-        }
-    }
 
     public boolean checkPermissions(String header, Consumer<String> responseSetter) {
         try {

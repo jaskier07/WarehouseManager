@@ -23,7 +23,7 @@ class HeaderExtractorTest {
     }
 
     @ParameterizedTest(name = "Extract token from authorization header: \"{0}\"")
-    @MethodSource(value = "pl.kania.warehousemanager.services.TestHeaderFactory#getValidHeaders")
+    @MethodSource(value = "pl.kania.warehousemanager.services.TestHeaderFactory#getValidHeadersWithToken")
     void givenStringWithValidAuthorizationHeaderTryToExtractTokenThenReturnIt(String header, String tokenToExtract) throws TokenNotFoundInHeaderException {
         Optional<String> token = HeaderExtractor.extractTokenFromAuthorizationHeader(header);
         assertNotEquals(Optional.empty(), token);
