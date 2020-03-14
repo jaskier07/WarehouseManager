@@ -1,6 +1,8 @@
-package pl.kania.warehousemanager.factory;
+package pl.kania.warehousemanager.services;
 
 import org.junit.jupiter.params.provider.Arguments;
+import pl.kania.warehousemanager.model.TestClientDetailsFactory;
+import pl.kania.warehousemanager.model.TestUserFactory;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.services.security.TokenCreator;
 

@@ -1,9 +1,8 @@
-package pl.kania.warehousemanager.factory;
+package pl.kania.warehousemanager.model;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.User;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

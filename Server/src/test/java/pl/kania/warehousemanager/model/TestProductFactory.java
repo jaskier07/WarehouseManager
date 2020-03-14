@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.factory;
+package pl.kania.warehousemanager.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import pl.kania.warehousemanager.model.db.Product;

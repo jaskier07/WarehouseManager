@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.factory;
+package pl.kania.warehousemanager.model;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

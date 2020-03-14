@@ -6,8 +6,8 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
-import pl.kania.warehousemanager.factory.TestHeaderFactory;
 import pl.kania.warehousemanager.model.WarehouseRole;
+import pl.kania.warehousemanager.services.TestHeaderFactory;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
