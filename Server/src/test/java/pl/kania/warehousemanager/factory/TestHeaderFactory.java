@@ -1,21 +1,37 @@
 package pl.kania.warehousemanager.factory;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.junit.jupiter.params.provider.Arguments;
 import pl.kania.warehousemanager.model.WarehouseRole;
-import pl.kania.warehousemanager.services.security.JWTService;
+import pl.kania.warehousemanager.services.security.TokenCreator;
 
-@Service
+import java.util.stream.Stream;
+
 public class TestHeaderFactory {
 
-    @Autowired
-    private JWTService jwtService;
-
-    public String getValidHeaderWithUserRole(WarehouseRole role) {
+    public static String getValidHeaderWithUserRole(WarehouseRole role) {
         return "BEARER " + getValidTokenWithUserRole(role);
     }
 
-    public String getValidTokenWithUserRole(WarehouseRole role) {
-        return jwtService.createJwt(TestUserFactory.getUserWithRole(role), TestClientDetailsFactory.getClientDetails());
+    public static String getValidTokenWithUserRole(WarehouseRole role) {
+        return TokenCreator.createJWT(TestUserFactory.getUserWithRole(role), TestClientDetailsFactory.getClientDetails(), "test-issuer", "test-audience");
+    }
+
+    public static Stream<Arguments> getValidHeaders() {
+        String tokenManager = getValidTokenWithUserRole(WarehouseRole.MANAGER);
+        String tokenEmployee = getValidTokenWithUserRole(WarehouseRole.EMPLOYEE);
+
+        Stream<Arguments> streamManager = getValidHeaderPrefixes()
+                .map(h -> Arguments.of(h + tokenManager, tokenManager));
+        Stream<Arguments> streamEmployee = getValidHeaderPrefixes()
+                .map(h -> Arguments.of(h + tokenEmployee, tokenEmployee));
+        return Stream.concat(streamManager, streamEmployee);
+}
+
+    public static Stream<String> getValidHeaderPrefixes() {
+        return Stream.of(
+                "BEARER ",
+                "Bearer ",
+                "bearer "
+        );
     }
 }
