@@ -1,6 +1,7 @@
 package pl.kania.warehousemanager.services.beans;
 
-import org.springframework.stereotype.Component;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import pl.kania.warehousemanager.exceptions.TokenNotFoundInHeaderException;
 import pl.kania.warehousemanager.model.UserCredentials;
 
@@ -8,10 +9,10 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class HeaderExtractor {
 
-    public Optional<UserCredentials> extractCredentialsFromAuthorizationHeader(String header, List<String> errors) throws TokenNotFoundInHeaderException {
+    public static Optional<UserCredentials> extractCredentialsFromAuthorizationHeader(String header, List<String> errors) throws TokenNotFoundInHeaderException {
         Optional<String> token = extractTokenFromAuthorizationHeader(header);
         if (!token.isPresent()) {
             return Optional.empty();
@@ -29,7 +30,7 @@ public class HeaderExtractor {
         return Optional.empty();
     }
 
-    public Optional<String> extractTokenFromAuthorizationHeader(String header) throws TokenNotFoundInHeaderException {
+    public static Optional<String> extractTokenFromAuthorizationHeader(String header) throws TokenNotFoundInHeaderException {
         final int indexOfSpace = header.indexOf(" ");
         if (indexOfSpace == -1) {
             throw new TokenNotFoundInHeaderException();

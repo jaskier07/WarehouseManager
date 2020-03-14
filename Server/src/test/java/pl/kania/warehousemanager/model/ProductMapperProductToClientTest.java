@@ -8,7 +8,6 @@ import pl.kania.warehousemanager.model.dto.ProductClient;
 public class ProductMapperProductToClientTest implements ComparableProduct<Product, ProductClient> {
 
     @SneakyThrows
-    @Override
     public Product createBaseProduct() {
         return TestProductFactory.newProduct();
     }

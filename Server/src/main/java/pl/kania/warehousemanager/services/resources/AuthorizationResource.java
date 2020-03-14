@@ -43,9 +43,6 @@ public class AuthorizationResource {
     private JWTService jwtService;
 
     @Autowired
-    private HeaderExtractor credentialExtractor;
-
-    @Autowired
     private UserRepository userRepository;
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -54,7 +51,7 @@ public class AuthorizationResource {
     public ResponseEntity<LoginResult> signInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
         final List<String> errors = new ArrayList<>();
         try {
-            final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization);
+            final Optional<String> googleToken = HeaderExtractor.extractTokenFromAuthorizationHeader(authorization);
             if (!googleToken.isPresent()) {
                 return getErrorRequest(errors);
             }
@@ -89,7 +86,7 @@ public class AuthorizationResource {
     public ResponseEntity<LoginResult> logInWithGoogle(@RequestHeader("Authorization") String authorization, @RequestParam Map<String, String> body) {
         final List<String> errors = new ArrayList<>();
         try {
-            final Optional<String> googleToken = credentialExtractor.extractTokenFromAuthorizationHeader(authorization);
+            final Optional<String> googleToken = HeaderExtractor.extractTokenFromAuthorizationHeader(authorization);
             if (!googleToken.isPresent()) {
                 return getErrorRequest(errors);
             }
@@ -136,7 +133,7 @@ public class AuthorizationResource {
         try {
             final List<String> errors = new ArrayList<>();
             Optional<UserCredentials> credentials;
-            credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
+            credentials = HeaderExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
             if (!credentials.isPresent()) {
                 return getErrorRequest(errors);
             }
@@ -169,7 +166,7 @@ public class AuthorizationResource {
     private Optional<UserAndClientFromRequest> getUserFromClient(String authorization, Map<String, String> body, List<String> errors, boolean validatePassword) {
         final Optional<UserCredentials> credentials;
         try {
-            credentials = credentialExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
+            credentials = HeaderExtractor.extractCredentialsFromAuthorizationHeader(authorization, errors);
             if (!credentials.isPresent()) {
                 return Optional.empty();
             }

@@ -4,8 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import pl.kania.warehousemanager.exceptions.TokenNotFoundInHeaderException;
 import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.services.beans.HeaderExtractor;
@@ -13,15 +11,11 @@ import pl.kania.warehousemanager.services.beans.HeaderExtractor;
 import java.util.Optional;
 
 @Slf4j
-@Service
 public class RoleChecker {
 
-    @Autowired
-    private HeaderExtractor headerExtractor;
-
-    public boolean hasRole(WarehouseRole requiredRole, String header) {
+    public static boolean hasRole(WarehouseRole requiredRole, String header) {
         try {
-            final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
+            final Optional<String> token = HeaderExtractor.extractTokenFromAuthorizationHeader(header);
             if (!token.isPresent()) {
                 return false;
             }

@@ -25,10 +25,7 @@ import pl.kania.warehousemanager.services.dao.ClientDetailsRepository;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -43,24 +40,13 @@ public class JWTService {
     @Autowired
     private ClientDetailsRepository clientDetailsRepository;
 
-    @Autowired
-    private HeaderExtractor headerExtractor;
-
     public String createJwt(User user, ClientDetails clientDetails) {
-        return JWT.create()
-                .withSubject(user.getId().toString())
-                .withIssuer(environment.getProperty("server.issuer"))
-                .withAudience(clientDetails.getClientId(), environment.getProperty("server.audience"))
-                .withExpiresAt(Date.from(LocalDateTime.now().plusDays(7).toInstant(ZoneOffset.UTC)))
-                .withClaim("login", user.getLogin())
-                .withClaim("role", user.getRole().name())
-                .withClaim("clientId", clientDetails.getClientId())
-                .sign(Algorithm.HMAC256(clientDetails.getClientSecret()));
+        return TokenCreator.createJWT(user, clientDetails, environment.getProperty("server.issuer"), environment.getProperty("server.audience"));
     }
 
     public Optional<String> getClientId(String header) {
         try {
-            final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
+            final Optional<String> token = HeaderExtractor.extractTokenFromAuthorizationHeader(header);
             if (!token.isPresent()) {
                 return Optional.empty();
             }
@@ -79,7 +65,7 @@ public class JWTService {
 
     public boolean checkPermissions(String header, Consumer<String> responseSetter) {
         try {
-            final Optional<String> token = headerExtractor.extractTokenFromAuthorizationHeader(header);
+            final Optional<String> token = HeaderExtractor.extractTokenFromAuthorizationHeader(header);
             if (!token.isPresent()) {
                 responseSetter.accept("No token in authorization header");
                 return false;

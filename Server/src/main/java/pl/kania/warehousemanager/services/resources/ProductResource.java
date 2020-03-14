@@ -40,9 +40,6 @@ public class ProductResource {
     @Autowired
     private VectorProvider vectorProvider;
 
-    @Autowired
-    private RoleChecker roleChecker;
-
     @GetMapping("/products")
     public ResponseEntity<Iterable<Product>> getAllProducts(@RequestHeader("Authorization") String header) {
         if (userDoesNotHavePermission(WarehouseRole.EMPLOYEE, header)) {
@@ -57,10 +54,7 @@ public class ProductResource {
             return getResponseUnauthorized();
         }
         Optional<Product> product = productDao.findById(productId);
-        if (!product.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(product.get());
+        return product.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/product")
@@ -157,7 +151,7 @@ public class ProductResource {
     }
 
     private boolean userDoesNotHavePermission(WarehouseRole role, @RequestHeader("Authorization") String header) {
-        return !roleChecker.hasRole(role, header);
+        return !RoleChecker.hasRole(role, header);
     }
 
     private boolean productNotExists(@QueryParam("productId") Long productId) {

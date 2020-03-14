@@ -12,7 +12,7 @@ public interface ComparableProduct<T extends TransferableProduct, U extends Tran
     U createNewProductAndFillItWithValuesFromBaseProduct(T baseProduct);
 
     @Test
-    default void givenBaseProductCreateNewProductAndFillItWithValuesFromBaseProductThenExpectSamevalues() {
+    default void givenBaseProductCreateNewProductAndFillItWithValuesFromBaseProductThenExpectSameValues() {
         T product1 = createBaseProduct();
         U product2 = createNewProductAndFillItWithValuesFromBaseProduct(product1);
 
