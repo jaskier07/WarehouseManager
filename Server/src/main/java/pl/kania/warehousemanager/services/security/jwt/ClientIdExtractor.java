@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.services.security;
+package pl.kania.warehousemanager.services.security.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
@@ -13,9 +13,9 @@ import java.util.Optional;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ClientIdExtractor {
+class ClientIdExtractor {
 
-    public static Optional<String> extractFromHeader(String header) {
+    static Optional<String> extractFromHeader(String header) {
         try {
             final Optional<String> token = HeaderExtractor.extractTokenFromAuthorizationHeader(header);
             if (!token.isPresent()) {

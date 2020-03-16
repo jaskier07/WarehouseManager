@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.services.security;
+package pl.kania.warehousemanager.services.security.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
@@ -11,9 +11,9 @@ import pl.kania.warehousemanager.services.beans.HeaderExtractor;
 import java.util.Optional;
 
 @Slf4j
-public class RoleChecker {
+class RoleChecker {
 
-    public static boolean hasRole(WarehouseRole requiredRole, String header) {
+    static boolean hasRole(WarehouseRole requiredRole, String header) {
         try {
             final Optional<String> token = HeaderExtractor.extractTokenFromAuthorizationHeader(header);
             if (!token.isPresent()) {

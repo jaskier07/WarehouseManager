@@ -18,10 +18,11 @@ import pl.kania.warehousemanager.model.WarehouseRole;
 import pl.kania.warehousemanager.model.db.ClientDetails;
 import pl.kania.warehousemanager.model.db.User;
 import pl.kania.warehousemanager.model.dto.LoginResult;
+import pl.kania.warehousemanager.services.ActionResult;
 import pl.kania.warehousemanager.services.beans.HeaderExtractor;
 import pl.kania.warehousemanager.services.dao.ClientDetailsRepository;
 import pl.kania.warehousemanager.services.dao.UserRepository;
-import pl.kania.warehousemanager.services.security.JWTService;
+import pl.kania.warehousemanager.services.security.jwt.JWTService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,9 +57,9 @@ public class AuthorizationResource {
                 return getErrorRequest(errors);
             }
 
-            final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get(), errors);
-            if (!payload.isPresent()) {
-                return getErrorRequest(errors);
+            final ActionResult<GoogleIdToken.Payload> payload = jwtService.getPayloadFromGoogleToken(googleToken.get());
+            if (payload.isError()) {
+                return getErrorRequest(payload.getErrorMessage());
             }
 
             final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
@@ -66,12 +67,12 @@ public class AuthorizationResource {
                 return getErrorRequest(errors);
             }
 
-            if (userRepository.findByLogin(payload.get().getEmail()) != null) {
+            if (userRepository.findByLogin(payload.getResult().getEmail()) != null) {
                 errors.add("User with this login already exists");
                 return getErrorRequest(errors);
             }
 
-            final User userToSave = new User(payload.get().getEmail(), null, WarehouseRole.EMPLOYEE);
+            final User userToSave = new User(payload.getResult().getEmail(), null, WarehouseRole.EMPLOYEE);
             final User savedUser = userRepository.save(userToSave);
 
             final String jwt = jwtService.createJwt(savedUser, clientFromRequest.get());
@@ -91,9 +92,9 @@ public class AuthorizationResource {
                 return getErrorRequest(errors);
             }
 
-            final Optional<GoogleIdToken.Payload> payload = jwtService.verifyGoogleToken(googleToken.get(), errors);
-            if (!payload.isPresent()) {
-                return getErrorRequest(errors);
+            final ActionResult<GoogleIdToken.Payload> payload = jwtService.getPayloadFromGoogleToken(googleToken.get());
+            if (payload.isError()) {
+                return getErrorRequest(payload.getErrorMessage());
             }
 
             final Optional<ClientDetails> clientFromRequest = getClientFromRequest(body, errors);
@@ -101,7 +102,7 @@ public class AuthorizationResource {
                 return getErrorRequest(errors);
             }
 
-            final User user = userRepository.findByLogin(payload.get().getEmail());
+            final User user = userRepository.findByLogin(payload.getResult().getEmail());
             if (user == null) {
                 errors.add("User not found");
                 return getErrorRequest(errors);

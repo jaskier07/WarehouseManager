@@ -20,9 +20,7 @@ import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.ChangeQuantityResult;
 import pl.kania.warehousemanager.services.beans.VectorProvider;
 import pl.kania.warehousemanager.services.dao.ProductRepository;
-import pl.kania.warehousemanager.services.security.ClientIdExtractor;
-import pl.kania.warehousemanager.services.security.JWTService;
-import pl.kania.warehousemanager.services.security.RoleChecker;
+import pl.kania.warehousemanager.services.security.jwt.JWTService;
 
 import javax.ws.rs.QueryParam;
 import java.net.URI;
@@ -66,7 +64,7 @@ public class ProductResource {
         if (product == null) {
             return getError();
         }
-        final Optional<String> clientId = ClientIdExtractor.extractFromHeader(header);
+        final Optional<String> clientId = jwtService.extractClientIdFromHeader(header);
         if (!clientId.isPresent()) {
             return getError();
         }
@@ -152,7 +150,7 @@ public class ProductResource {
     }
 
     private boolean userDoesNotHavePermission(WarehouseRole role, @RequestHeader("Authorization") String header) {
-        return !RoleChecker.hasRole(role, header);
+        return !jwtService.hasUserInTokenHeaderRequiredRole(role, header);
     }
 
     private boolean productNotExists(@QueryParam("productId") Long productId) {

@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.services.security;
+package pl.kania.warehousemanager.services.security.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -12,8 +12,8 @@ import java.time.ZoneOffset;
 import java.util.Date;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class TokenCreator {
-    public static String createJWT(User user, ClientDetails clientDetails, String issuer, String audience) {
+class TokenCreator {
+    static String createJWT(User user, ClientDetails clientDetails, String issuer, String audience) {
         return JWT.create()
                 .withSubject(user.getId().toString())
                 .withIssuer(issuer)

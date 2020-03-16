@@ -4,7 +4,7 @@ import lombok.SneakyThrows;
 import pl.kania.warehousemanager.model.db.Product;
 import pl.kania.warehousemanager.model.dto.ProductClient;
 
-public class ProductMapperProductToClientTest implements ComparableProduct<Product, ProductClient> {
+public class ProductMapperProductToClientTest implements ComparableProductTest<Product, ProductClient> {
 
     @SneakyThrows
     public Product createBaseProduct() {

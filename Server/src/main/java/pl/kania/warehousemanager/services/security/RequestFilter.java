@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import pl.kania.warehousemanager.services.ActionResult;
+import pl.kania.warehousemanager.services.security.jwt.JWTService;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -13,7 +15,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import java.io.IOException;
-import java.util.function.Consumer;
 
 @Component
 @Order(0)
@@ -40,13 +41,15 @@ public class RequestFilter implements Filter {
         } else if (resourceAddressIsLogInOrSignIn(requestFacade) || resourceAddresIsLogInOrSignInGoogle(requestFacade)) {
             chain.doFilter(request, response);
         } else {
-            Consumer<String> responseStatusSetter = text -> responseFacade.setStatus(UNAUTHORIZED_CODE, text);
-            if (jwtService.checkPermissions(requestFacade.getHeader("Authorization"), responseStatusSetter)) {
+            ActionResult<Boolean> hasPermission = jwtService.checkPermission(requestFacade.getHeader("Authorization"));
+            if (hasPermission.isSuccess()) {
                 if (resourceAddressStartsWith("/check-token", requestFacade)) {
                     responseFacade.setStatus(SUCCESS_CODE);
                 } else {
                     chain.doFilter(request, response);
                 }
+            } else {
+                responseFacade.setStatus(UNAUTHORIZED_CODE, hasPermission.getErrorMessage());
             }
         }
     }

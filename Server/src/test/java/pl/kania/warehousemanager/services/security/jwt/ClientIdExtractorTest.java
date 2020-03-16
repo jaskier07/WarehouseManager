@@ -1,4 +1,4 @@
-package pl.kania.warehousemanager.services.security;
+package pl.kania.warehousemanager.services.security.jwt;
 
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
